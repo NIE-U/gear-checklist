@@ -1079,7 +1079,9 @@
         storageOK: true,
         toastTimer: null,
         importParsed: null,
-        importDuplicateCount: 0
+        importDuplicateCount: 0,
+        layoutSignature: null,
+        layoutColumns: null
       };
 
       const byId = id => document.getElementById(id);
@@ -1442,11 +1444,24 @@
       function measureGearCards(cards) {
         const gap = 16;
         const width = Math.max(260, Math.floor((els.gearGroups.clientWidth - gap) / 2));
+        const formReplacements = cards.map(card => {
+          const form = card.querySelector('.inline-form');
+          if (!form) return null;
+          const placeholder = document.createElement('button');
+          placeholder.type = 'button';
+          placeholder.className = 'quick-add';
+          placeholder.setAttribute('aria-hidden', 'true');
+          form.replaceWith(placeholder);
+          return { form, placeholder };
+        });
         const holder = document.createElement('div');
         holder.style.cssText = `position:fixed;left:-10000px;top:0;width:${width}px;visibility:hidden;pointer-events:none;z-index:-1;`;
         cards.forEach(card => holder.appendChild(card));
         document.body.appendChild(holder);
         const heights = cards.map(card => card.getBoundingClientRect().height);
+        formReplacements.forEach(item => {
+          if (item) item.placeholder.replaceWith(item.form);
+        });
         holder.remove();
         return heights;
       }
@@ -1491,6 +1506,20 @@
         return [best.left, best.right];
       }
 
+      function getGearLayoutSignature() {
+        return CATEGORIES.map(category => {
+          const items = state.items.filter(item => item.category === category.key);
+          const nameLength = items.reduce((sum, item) => sum + item.name.length, 0);
+          return `${category.key}:${items.length}:${nameLength}`;
+        }).join('|');
+      }
+
+      function isValidGearLayout(layout, count) {
+        if (!Array.isArray(layout) || layout.length !== 2) return false;
+        const indexes = [...layout[0], ...layout[1]].sort((left, right) => left - right);
+        return indexes.length === count && indexes.every((value, index) => value === index);
+      }
+
       function appendGearCards(cards) {
         if (!cards.length) return;
 
@@ -1499,8 +1528,18 @@
           return;
         }
 
-        const heights = measureGearCards(cards);
-        const [leftIndexes, rightIndexes] = distributeGearCards(heights);
+        const signature = getGearLayoutSignature();
+        let layout = isValidGearLayout(state.layoutColumns, cards.length) ? state.layoutColumns : null;
+        const canReuse = layout && state.layoutSignature === signature;
+
+        if (!canReuse) {
+          const heights = measureGearCards(cards);
+          layout = distributeGearCards(heights);
+          state.layoutSignature = signature;
+          state.layoutColumns = layout;
+        }
+
+        const [leftIndexes, rightIndexes] = layout;
         const leftCards = leftIndexes.map(index => cards[index]);
         const rightCards = rightIndexes.map(index => cards[index]);
         const columns = [createGearColumn(leftCards)];
