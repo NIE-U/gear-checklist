@@ -4,9 +4,13 @@
 
 ## 在线访问
 
-GitHub Pages 发布后地址为：
+GitHub Pages 公网地址：
 
-`https://<GitHub用户名>.github.io/gear-checklist/`
+`https://nie-u.github.io/gear-checklist/`
+
+源码仓库：
+
+`https://github.com/NIE-U/gear-checklist`
 
 ## 数据说明
 
