@@ -1,0 +1,2783 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f5ef">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f7d51'/%3E%3Cpath d='M21 25h22l4 27H17l4-27Z' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M26 25v-4a6 6 0 0 1 12 0v4' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E">
+  <title>装备清单</title>
+  <style>
+    :root {
+      --page: #f3f5ef;
+      --surface: #ffffff;
+      --surface-soft: #f7f8f4;
+      --green: #2f7d51;
+      --green-strong: #24633f;
+      --green-soft: #e9f3ed;
+      --ink: #17231b;
+      --muted: #6c776f;
+      --faint: #96a098;
+      --line: #e1e6dc;
+      --line-strong: #d4dcd0;
+      --danger: #b64840;
+      --danger-soft: #fff2f0;
+      --gold: #ae6a22;
+      --shadow: 0 20px 60px rgba(38, 58, 43, .075), 0 2px 10px rgba(38, 58, 43, .035);
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 300px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(86, 147, 105, .13), transparent 28rem),
+        radial-gradient(circle at 96% 10%, rgba(196, 161, 82, .09), transparent 26rem),
+        var(--page);
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .32;
+      background-image:
+        repeating-radial-gradient(circle at 94% 4%, transparent 0 36px, rgba(47, 125, 81, .055) 37px 38px),
+        repeating-radial-gradient(circle at 2% 28%, transparent 0 54px, rgba(47, 125, 81, .035) 55px 56px);
+      mask-image: linear-gradient(to bottom, #000 0, transparent 54%);
+    }
+
+    ::selection { background: rgba(47, 125, 81, .18); }
+    [hidden] { display: none !important; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(47, 125, 81, .2);
+      outline-offset: 2px;
+      border-color: var(--green) !important;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(1220px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 30px 0 42px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 12px 4px 28px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .brand-kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--green);
+      font-family: "Bahnschrift", "Segoe UI", sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .2em;
+    }
+
+    .brand-kicker::before {
+      content: "";
+      width: 26px;
+      height: 2px;
+      border-radius: 9px;
+      background: var(--green);
+    }
+
+    .hero h1 {
+      margin: 15px 0 9px;
+      font-size: clamp(40px, 5vw, 62px);
+      line-height: 1.04;
+      letter-spacing: -.055em;
+      font-weight: 800;
+    }
+
+    .hero h1 span { color: var(--green); }
+
+    .hero-sub {
+      max-width: 640px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 9px;
+      padding-bottom: 3px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 17px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 650;
+      line-height: 1;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: #cbd4c7;
+      box-shadow: 0 8px 22px rgba(38, 58, 43, .08);
+    }
+
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
+    .btn-primary {
+      border-color: var(--green);
+      background: var(--green);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(47, 125, 81, .18);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      border-color: var(--green-strong);
+      background: var(--green-strong);
+      box-shadow: 0 12px 26px rgba(47, 125, 81, .22);
+    }
+
+    .btn-quiet { background: rgba(255, 255, 255, .55); }
+    .btn-danger { color: var(--danger); }
+    .btn-danger:hover:not(:disabled) { background: var(--danger-soft); border-color: #edc8c4; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .storage-warning {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-top: 16px;
+      padding: 11px 14px;
+      border: 1px solid #ecd8b8;
+      border-radius: 12px;
+      background: #fff8ec;
+      color: #80502a;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .storage-warning svg { width: 17px; height: 17px; flex: 0 0 auto; }
+
+    .surface {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.38fr) minmax(330px, .82fr);
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .summary-card, .category-card { padding: 22px 24px; }
+    .summary-card { position: relative; overflow: hidden; }
+    .summary-card::after {
+      content: "";
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      top: -106px;
+      right: -78px;
+      border-radius: 50%;
+      border: 28px solid rgba(47, 125, 81, .045);
+      pointer-events: none;
+    }
+
+    .card-label-row {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .section-label, .section-eyebrow {
+      color: var(--green);
+      font-family: "Bahnschrift", "Segoe UI", sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .section-label { color: var(--ink); font-family: inherit; font-size: 13px; letter-spacing: .04em; }
+    .card-note { color: var(--faint); font-size: 10px; letter-spacing: .03em; }
+
+    .kpi-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 19px;
+    }
+
+    .kpi {
+      min-width: 0;
+      padding: 17px 17px 15px;
+      border: 1px solid #e8ece4;
+      border-radius: 17px;
+      background: linear-gradient(160deg, #f8faf6, #f4f6f1);
+    }
+
+    .kpi-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .kpi-label::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--kpi-color, var(--green));
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--kpi-color, var(--green)) 12%, transparent);
+    }
+
+    .kpi-value {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-top: 13px;
+      overflow: hidden;
+      color: var(--ink);
+      font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif;
+      font-size: clamp(28px, 3.1vw, 42px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -.035em;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      text-overflow: ellipsis;
+    }
+
+    .kpi-value .unit {
+      color: var(--muted);
+      font-family: "Microsoft YaHei UI", sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .kpi-foot {
+      display: block;
+      margin-top: 10px;
+      overflow: hidden;
+      color: var(--faint);
+      font-size: 10px;
+      line-height: 1.4;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .donut-layout {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      min-height: 164px;
+      margin-top: 18px;
+    }
+
+    .donut {
+      display: grid;
+      place-items: center;
+      flex: 0 0 150px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: conic-gradient(#e8ece4 0 100%);
+      box-shadow: inset 0 0 0 1px rgba(47, 125, 81, .04);
+      transition: background .25s ease;
+    }
+
+    .donut-core {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 4px 16px rgba(38, 58, 43, .07);
+    }
+
+    .donut-core strong {
+      font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -.04em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .donut-core span { margin-top: 6px; color: var(--faint); font-size: 9px; letter-spacing: .12em; }
+
+    .category-legend {
+      display: grid;
+      align-content: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--legend-color); }
+    .legend-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .legend-value { color: var(--ink); font-family: "Bahnschrift", sans-serif; font-size: 10px; font-variant-numeric: tabular-nums; }
+    .legend-empty { margin: 0; color: var(--faint); font-size: 11px; line-height: 1.7; }
+
+    .list-heading h2 { margin: 5px 0 0; font-size: 21px; line-height: 1.2; letter-spacing: -.03em; }
+
+    .field { min-width: 0; }
+    .field label { display: block; margin: 0 0 7px 2px; color: var(--muted); font-size: 11px; font-weight: 650; }
+
+    .control, .compound, .money-input {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .control { padding: 0 12px; }
+    select.control { cursor: pointer; }
+
+    .compound {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 68px;
+      overflow: hidden;
+    }
+
+    .compound input, .compound select, .money-input input {
+      width: 100%;
+      min-width: 0;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--ink);
+      padding: 0 12px;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .compound select { cursor: pointer; border-left: 1px solid var(--line); background: var(--surface-soft); padding: 0 8px; }
+    .unit-suffix { display: grid; place-items: center; border-left: 1px solid var(--line); background: var(--surface-soft); color: var(--muted); font-size: 11px; font-weight: 600; }
+    .money-input { display: grid; grid-template-columns: 32px minmax(0, 1fr); overflow: hidden; }
+    .money-input span { display: grid; place-items: center; background: var(--surface-soft); border-right: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .money-input input { padding-left: 10px; }
+    .compound:focus-within, .money-input:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(47, 125, 81, .09); }
+
+    .list-section { margin-top: 30px; }
+    .list-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 0 4px 13px; }
+    .list-heading-meta { display: flex; align-items: center; gap: 9px; color: var(--faint); font-size: 10px; }
+    .list-heading-meta strong { color: var(--muted); font-weight: 650; }
+    .divider-dot { width: 3px; height: 3px; border-radius: 50%; background: #c3cbc0; }
+
+    .gear-groups {
+      display: flex;
+      align-items: start;
+      gap: 16px;
+    }
+
+    .gear-column {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      min-width: 0;
+      gap: 16px;
+    }
+    .group-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: #fff;
+      box-shadow: 0 14px 38px rgba(38, 58, 43, .055);
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .group-card.form-open {
+      border-color: var(--cat);
+      box-shadow: 0 14px 38px rgba(38, 58, 43, .06), 0 0 0 3px var(--cat-soft);
+    }
+
+    .group-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--cat);
+    }
+
+    .group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      padding: 16px 18px 11px 21px;
+    }
+
+    .group-title-wrap { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .category-icon {
+      display: grid;
+      place-items: center;
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+      background: var(--cat-soft);
+      color: var(--cat);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .group-title h3 { margin: 0; font-size: 16px; letter-spacing: -.02em; }
+    .group-sub { margin-top: 5px; color: var(--faint); font-size: 10px; }
+    .group-sub strong { color: var(--cat); font-weight: 700; }
+
+    .group-stats { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 14px; }
+    .group-stat { min-width: 48px; text-align: right; }
+    .group-stat span { display: block; color: var(--faint); font-size: 9px; letter-spacing: .06em; }
+    .group-stat strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif;
+      font-size: 13px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .group-progress {
+      height: 4px;
+      margin: 0 18px 0 21px;
+      overflow: hidden;
+      border-radius: 9px;
+      background: #edf0ea;
+    }
+
+    .group-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--cat); transition: width .35s ease; }
+
+    .item-table { padding: 3px 18px 9px 21px; }
+    .item-head, .item-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 76px 84px 68px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .item-head {
+      padding: 11px 8px 9px;
+      color: var(--faint);
+      font-size: 9px;
+      letter-spacing: .08em;
+      border-bottom: 1px solid #edf0ea;
+    }
+
+    .item-head span:nth-child(2), .item-head span:nth-child(3) { text-align: right; }
+    .item-row { padding: 12px 8px; border-bottom: 1px solid #f0f2ed; border-radius: 9px; transition: background .15s ease; }
+    .item-row:last-child { border-bottom-color: transparent; }
+    .item-row:hover { background: #fafbf8; }
+    .item-name { min-width: 0; color: #273329; font-size: 13px; font-weight: 560; line-height: 1.55; overflow-wrap: anywhere; }
+    .item-weight, .item-price { text-align: right; font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .item-weight { color: var(--muted); }
+    .item-price { color: var(--ink); font-weight: 650; }
+    .row-actions { display: flex; justify-content: flex-end; gap: 1px; }
+
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      color: #7e8980;
+      transition: background .16s ease, border-color .16s ease, color .16s ease;
+    }
+
+    .icon-btn svg { width: 15px; height: 15px; }
+    .icon-btn:hover { border-color: var(--line); background: var(--surface-soft); color: var(--green); }
+    .icon-btn.delete:hover { border-color: #eed1cd; background: var(--danger-soft); color: var(--danger); }
+
+    .category-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 56px;
+      padding: 12px 8px 14px;
+      color: var(--faint);
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .category-empty::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--cat);
+      opacity: .5;
+    }
+
+    .quick-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      width: calc(100% - 39px);
+      min-height: 42px;
+      margin: 0 18px 16px 21px;
+      padding: 0 12px;
+      border: 1px dashed color-mix(in srgb, var(--cat) 42%, #d9dfd6);
+      border-radius: 11px;
+      background: var(--cat-soft);
+      color: var(--cat);
+      font-size: 11px;
+      font-weight: 650;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+
+    .quick-add:hover {
+      border-color: var(--cat);
+      background: color-mix(in srgb, var(--cat-soft) 72%, #fff);
+      transform: translateY(-1px);
+    }
+
+    .quick-add svg { width: 14px; height: 14px; }
+
+    .inline-form {
+      margin: 0 18px 16px 21px;
+      padding: 13px 13px 10px;
+      border: 1px solid var(--line);
+      border-top: 2px solid var(--cat);
+      border-radius: 13px;
+      background: linear-gradient(180deg, #fbfcfa, #f6f9f4);
+    }
+
+    .inline-form-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .inline-form-head strong { color: var(--ink); font-size: 11px; }
+    .inline-form-head span { color: var(--faint); font-size: 9px; }
+    .inline-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .inline-name { grid-column: 1 / -1; }
+    .inline-form .field label { margin-bottom: 5px; font-size: 9px; }
+    .inline-form .control, .inline-form .compound, .inline-form .money-input { height: 38px; border-radius: 9px; }
+    .inline-form .control { padding: 0 10px; font-size: 12px; }
+    .inline-form .compound { grid-template-columns: minmax(0, 1fr) 55px; }
+    .inline-form .compound input, .inline-form .compound select, .inline-form .money-input input { font-size: 12px; padding: 0 9px; }
+    .inline-form .compound select { padding: 0 5px; }
+    .inline-form .money-input { grid-template-columns: 27px minmax(0, 1fr); }
+    .inline-form .money-input span { font-size: 11px; }
+    .inline-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 9px; }
+    .inline-actions .btn { min-height: 35px; padding: 0 13px; border-radius: 9px; font-size: 11px; }
+    .inline-error { min-height: 14px; margin: 5px 1px 0; color: var(--danger); font-size: 9px; line-height: 1.4; }
+
+    .site-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      margin-top: 26px;
+      padding: 16px 4px 0;
+      border-top: 1px solid var(--line-strong);
+      color: var(--faint);
+      font-size: 9px;
+      line-height: 1.7;
+    }
+
+    .site-footer b { color: var(--muted); font-weight: 600; }
+    .site-footer .right { text-align: right; white-space: nowrap; }
+
+    .pending-value { color: var(--gold) !important; font-weight: 650; }
+    .pending-value::before {
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin-right: 5px;
+      border-radius: 50%;
+      background: #c88c3f;
+      vertical-align: 1px;
+    }
+    .kpi-foot.pending, .legend-pending .legend-name, .legend-pending .legend-value { color: #9c6a2a; }
+
+    .import-dialog {
+      width: min(780px, calc(100vw - 32px));
+      max-width: none;
+      max-height: min(88vh, 860px);
+      padding: 0;
+      border: 0;
+      border-radius: 24px;
+      background: transparent;
+      color: var(--ink);
+      overflow: visible;
+    }
+
+    .import-dialog::backdrop {
+      background: rgba(19, 29, 22, .46);
+      backdrop-filter: blur(4px);
+    }
+
+    .import-shell {
+      display: flex;
+      flex-direction: column;
+      max-height: min(88vh, 860px);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .5);
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 34px 90px rgba(18, 30, 22, .24), 0 4px 18px rgba(18, 30, 22, .08);
+    }
+
+    .import-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 23px 26px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(145deg, #fbfcf9, #f3f7f1);
+    }
+
+    .import-kicker {
+      color: var(--green);
+      font-family: "Bahnschrift", "Segoe UI", sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .18em;
+    }
+
+    .import-head h2 { margin: 7px 0 0; font-size: 23px; letter-spacing: -.035em; }
+    .import-head p { max-width: 560px; margin: 7px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+
+    .import-close {
+      display: grid;
+      place-items: center;
+      flex: 0 0 36px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, .78);
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .import-close:hover { border-color: #cbd4c7; background: #fff; color: var(--ink); }
+    .import-body { min-height: 0; overflow-y: auto; padding: 20px 26px 22px; }
+    .import-text-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 2px 7px; }
+    .import-text-label strong { font-size: 12px; }
+    .import-text-label span { color: var(--faint); font-size: 9px; }
+
+    .import-textarea {
+      width: 100%;
+      min-height: 164px;
+      max-height: 330px;
+      resize: vertical;
+      padding: 13px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      background: #fcfdfa;
+      color: var(--ink);
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .import-textarea:focus { outline: 3px solid rgba(47, 125, 81, .12); border-color: var(--green); background: #fff; }
+    .import-help { margin: 7px 2px 0; color: var(--faint); font-size: 9px; line-height: 1.65; }
+
+    .import-preview { margin-top: 17px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: #fafbf8; }
+    .import-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: #f6f8f3; }
+    .import-preview-head strong { font-size: 11px; }
+    .import-preview-head span { color: var(--muted); font-size: 9px; text-align: right; line-height: 1.55; }
+    .import-preview-list { max-height: 282px; overflow-y: auto; overscroll-behavior: contain; }
+    .import-preview-empty { margin: 0; padding: 28px 18px; color: var(--faint); font-size: 10px; line-height: 1.6; text-align: center; }
+    .import-group + .import-group { border-top: 1px solid var(--line); }
+    .import-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 14px; background: rgba(247, 249, 244, .82); color: var(--muted); font-size: 9px; font-weight: 650; }
+    .import-group-head span:last-child { color: var(--faint); font-weight: 500; }
+
+    .import-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 92px 82px;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-top: 1px solid #eef1eb;
+      font-size: 11px;
+    }
+
+    .import-name-wrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .import-item-name { min-width: 0; overflow-wrap: anywhere; line-height: 1.5; }
+    .import-duplicate { flex: 0 0 auto; padding: 2px 5px; border: 1px solid #ead4ad; border-radius: 5px; background: #fff8e9; color: #95601d; font-size: 8px; font-weight: 650; }
+    .import-item-value { text-align: right; color: var(--muted); font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .import-item-value.price { color: var(--ink); font-weight: 650; }
+    .import-item-value.pending { color: #a36c25; font-family: "Microsoft YaHei UI", sans-serif; font-weight: 650; }
+
+    .import-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 26px 18px; border-top: 1px solid var(--line); background: #fff; }
+    .import-error { flex: 1; margin: 0; color: var(--danger); font-size: 9px; line-height: 1.5; }
+    .import-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .import-actions .btn { min-height: 40px; padding: 0 16px; }
+
+    .toast {
+      position: fixed;
+      z-index: 50;
+      left: 50%;
+      bottom: 28px;
+      max-width: min(90vw, 520px);
+      padding: 12px 18px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 999px;
+      background: #1c2a20;
+      color: #f5f7f2;
+      box-shadow: 0 16px 42px rgba(20, 30, 23, .24);
+      font-size: 12px;
+      line-height: 1.5;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.error { background: #6f2d2a; }
+
+    @media (max-width: 1080px) {
+      .hero { align-items: flex-start; flex-direction: column; gap: 20px; }
+      .hero-actions { justify-content: flex-start; }
+    }
+
+    @media (max-width: 1000px) {
+      .gear-groups { flex-direction: column; }
+      .gear-column { width: 100%; flex: 1 1 auto; }
+    }
+
+    @media (max-width: 900px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .donut-layout { justify-content: center; }
+      .category-legend { max-width: 330px; }
+    }
+
+    @media (max-width: 720px) {
+      .app { width: min(100% - 28px, 1220px); padding-top: 20px; }
+      .hero { padding-bottom: 22px; }
+      .hero-sub { font-size: 12px; }
+      .hero-actions { width: 100%; }
+      .hero-actions .btn { flex: 1 1 auto; padding: 0 12px; }
+      .hero-actions .btn-danger { flex: 0 0 auto; }
+      .summary-card, .category-card { padding: 18px; }
+      .kpi-grid { gap: 7px; }
+      .kpi { padding: 13px 10px 12px; border-radius: 14px; }
+      .kpi-label { font-size: 9px; gap: 5px; }
+      .kpi-label::before { width: 6px; height: 6px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--kpi-color, var(--green)) 12%, transparent); }
+      .kpi-value { margin-top: 11px; font-size: clamp(23px, 7.2vw, 32px); gap: 3px; }
+      .kpi-value .unit { font-size: 9px; }
+      .kpi-foot { font-size: 8px; margin-top: 8px; }
+      .donut-layout { gap: 18px; min-height: 148px; }
+      .donut { flex-basis: 138px; width: 138px; height: 138px; }
+      .donut-core { width: 100px; height: 100px; }
+      .donut-core strong { font-size: 26px; }
+      .list-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+      .group-head { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px 16px 10px 20px; }
+      .group-stats { justify-content: flex-start; gap: 17px; padding-left: 52px; }
+      .group-stat { text-align: left; }
+      .group-progress { margin-left: 20px; margin-right: 16px; }
+      .item-table { padding: 3px 16px 9px 20px; }
+      .item-head { display: none; }
+      .item-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "name actions" "weight price";
+        gap: 5px 12px;
+        padding: 13px 5px;
+      }
+      .item-name { grid-area: name; font-size: 13px; }
+      .item-weight { grid-area: weight; text-align: left; font-size: 11px; }
+      .item-price { grid-area: price; text-align: right; font-size: 12px; }
+      .row-actions { grid-area: actions; }
+      .item-weight::before { content: "重量  "; color: var(--faint); font-family: "Microsoft YaHei UI", sans-serif; font-size: 9px; font-weight: 500; }
+      .quick-add { width: calc(100% - 36px); margin-left: 20px; margin-right: 16px; }
+      .inline-form { margin-left: 20px; margin-right: 16px; }
+      .site-footer { flex-direction: column; gap: 4px; }
+      .site-footer .right { text-align: left; white-space: normal; }
+    }
+
+    @media (max-width: 430px) {
+      .app { width: min(100% - 20px, 1220px); }
+      .donut-layout { align-items: center; flex-direction: column; gap: 15px; }
+      .category-legend { width: 100%; max-width: none; grid-template-columns: 1fr 1fr; }
+      .group-stats { padding-left: 0; }
+      .group-stat strong { font-size: 12px; }
+      .inline-form-grid { grid-template-columns: 1fr; }
+      .inline-name { grid-column: auto; }
+    }
+
+    @media (max-width: 640px) {
+      .import-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+      .import-shell { max-height: calc(100dvh - 16px); border-radius: 19px; }
+      .import-head { padding: 18px 18px 14px; }
+      .import-head h2 { font-size: 20px; }
+      .import-head p { font-size: 10px; }
+      .import-close { flex-basis: 33px; width: 33px; height: 33px; border-radius: 10px; }
+      .import-body { padding: 16px 18px 18px; }
+      .import-textarea { min-height: 145px; font-size: 11px; }
+      .import-preview-list { max-height: 236px; }
+      .import-item {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas: "name name" "weight price";
+        gap: 3px 10px;
+        padding: 9px 12px;
+      }
+      .import-name-wrap { grid-area: name; }
+      .import-item-value.weight { grid-area: weight; text-align: left; }
+      .import-item-value.price { grid-area: price; }
+      .import-footer { align-items: stretch; flex-direction: column; gap: 9px; padding: 13px 18px 16px; }
+      .import-actions { width: 100%; }
+      .import-actions .btn { flex: 1 1 0; }
+    }
+
+    @media (max-width: 520px) {
+      .hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-actions .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-copy">
+        <div class="brand-kicker">GEAR CHECKLIST</div>
+        <h1>装备<span>清单</span></h1>
+        <p class="hero-sub">7 大装备系统固定呈现，在对应分类卡片底部直接添加装备，自动汇总重量、价值与分类占比。</p>
+      </div>
+      <div class="hero-actions" aria-label="清单操作">
+        <button class="btn" id="open-import" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h6M8 17h4"/></svg>
+          <span>导入文本</span>
+        </button>
+        <button class="btn btn-primary" id="export-image" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m7 15 3.1-3.1a1 1 0 0 1 1.4 0l1.7 1.7 1.2-1.2a1 1 0 0 1 1.4 0L19 15.8"/><circle cx="8" cy="9" r="1.2"/></svg>
+          <span id="export-image-label">导出长图</span>
+        </button>
+        <button class="btn" id="export-csv" type="button" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 14h8M8 18h5"/></svg>
+          <span id="export-csv-label">导出 CSV</span>
+        </button>
+        <button class="btn btn-quiet btn-danger" id="clear-list" type="button" disabled>清空</button>
+      </div>
+    </header>
+
+    <div class="storage-warning" id="storage-warning" role="status" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 8v5M12 17h.01"/><path d="M10.3 3.8 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg>
+      浏览器禁用了本地存储，本次录入可以正常计算和导出，但关闭页面后不会保留。
+    </div>
+
+    <main>
+      <section class="dashboard" aria-label="装备统计概览">
+        <article class="surface summary-card">
+          <div class="card-label-row">
+            <span class="section-label">清单总览</span>
+            <span class="card-note">录入后实时更新</span>
+          </div>
+          <div class="kpi-grid">
+            <div class="kpi" style="--kpi-color:#2f7d51">
+              <div class="kpi-label">装备数量</div>
+              <div class="kpi-value"><strong id="total-count">0</strong><span class="unit">件</span></div>
+              <span class="kpi-foot">当前清单已录入</span>
+            </div>
+            <div class="kpi" style="--kpi-color:#4e7ce7">
+              <div class="kpi-label">装备总重</div>
+              <div class="kpi-value"><strong id="total-weight">0.00</strong><span class="unit">kg</span></div>
+              <span class="kpi-foot" id="weight-foot">全部装备重量合计</span>
+            </div>
+            <div class="kpi" style="--kpi-color:#c08732">
+              <div class="kpi-label">装备总价值</div>
+              <div class="kpi-value"><strong id="total-value">¥0</strong></div>
+              <span class="kpi-foot" id="value-foot">按录入价格计算</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="surface category-card">
+          <div class="card-label-row">
+            <span class="section-label">重量构成</span>
+            <span class="card-note">按系统分类</span>
+          </div>
+          <div class="donut-layout">
+            <div class="donut" id="donut" role="img" aria-label="装备分类重量占比：暂无数据">
+              <div class="donut-core">
+                <strong id="donut-count">0</strong>
+                <span>件装备</span>
+              </div>
+            </div>
+            <div class="category-legend" id="category-legend">
+              <p class="legend-empty">添加装备后，这里会显示各类别的重量占比。</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="list-section" aria-labelledby="list-title">
+        <div class="list-heading">
+          <div>
+            <div class="section-eyebrow">GEAR SYSTEMS</div>
+            <h2 id="list-title">分类装备清单</h2>
+          </div>
+          <div class="list-heading-meta">
+            <strong id="item-count-note">0 件装备</strong>
+            <span class="divider-dot"></span>
+            <span>7 个固定分类 · 在分类内直接添加</span>
+          </div>
+        </div>
+
+        <div class="gear-groups" id="gear-groups" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div><b>装备清单</b> · 修改仅保存在当前浏览器 · 换设备或清理缓存前请导出备份</div>
+      <div class="right">价格按录入值计算，仅作个人装备记录参考</div>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="import-dialog" id="import-dialog" aria-labelledby="import-title">
+    <div class="import-shell">
+      <header class="import-head">
+        <div>
+          <div class="import-kicker">TEXT IMPORT</div>
+          <h2 id="import-title">导入现有文本</h2>
+          <p>粘贴分类标题和装备行，重量、价格可以缺失。全部解析都在当前浏览器完成，不会上传或联网查询。</p>
+        </div>
+        <button class="import-close" id="import-close" type="button" aria-label="关闭导入窗口">×</button>
+      </header>
+      <div class="import-body">
+        <label class="import-text-label" for="import-text"><strong>装备清单文本</strong><span>勾选和未勾选条目都会导入</span></label>
+        <textarea class="import-textarea" id="import-text" spellcheck="false" placeholder="睡眠系统&#10;☑ 帐篷 黑鹿纵横 1.39kg&#10;☐ 睡袋 翼士md700&#10;&#10;服饰系统&#10;☑ 雨衣 三峰出 850g"></textarea>
+        <p class="import-help">支持分类标题：睡眠系统、背负系统、服饰系统、饮食系统、安全装备、电子设备、其他。重量支持 g/kg/克/千克，价格支持 ¥599、599元，或重量后的末尾数字。</p>
+        <section class="import-preview" aria-labelledby="import-preview-title">
+          <div class="import-preview-head">
+            <strong id="import-preview-title">解析预览</strong>
+            <span id="import-summary" aria-live="polite">粘贴文本后自动解析</span>
+          </div>
+          <div class="import-preview-list" id="import-preview-list">
+            <p class="import-preview-empty">还没有可预览的装备。</p>
+          </div>
+        </section>
+      </div>
+      <footer class="import-footer">
+        <p class="import-error" id="import-error" role="alert"></p>
+        <div class="import-actions">
+          <button class="btn" id="import-cancel" type="button">取消</button>
+          <button class="btn btn-primary" id="import-submit" type="button" disabled>追加导入</button>
+        </div>
+      </footer>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'hiking-gear-list.v1';
+      const CATEGORIES = Object.freeze([
+        { key: 'sleep', name: '睡眠系统', short: '睡', color: '#4E7CE7', soft: '#EDF2FE' },
+        { key: 'carry', name: '背负系统', short: '背', color: '#2F8E5C', soft: '#EAF5EE' },
+        { key: 'clothing', name: '服饰系统', short: '服', color: '#D8952D', soft: '#FBF2E4' },
+        { key: 'food', name: '饮食系统', short: '饮', color: '#1D9990', soft: '#E8F6F4' },
+        { key: 'safety', name: '安全装备', short: '安', color: '#D85B55', soft: '#FBECEA' },
+        { key: 'electronics', name: '电子设备', short: '电', color: '#7A66D5', soft: '#F0EEFC' },
+        { key: 'other', name: '其他', short: '其', color: '#6F7C73', soft: '#EFF2EE' }
+      ]);
+      const CATEGORY_MAP = new Map(CATEGORIES.map(category => [category.key, category]));
+      const CATEGORY_ALIASES = new Map([
+        ['睡眠系统', 'sleep'], ['睡眠装备', 'sleep'], ['睡眠', 'sleep'],
+        ['背负系统', 'carry'], ['背负装备', 'carry'], ['背负', 'carry'],
+        ['服饰系统', 'clothing'], ['服饰装备', 'clothing'], ['服饰', 'clothing'],
+        ['饮食系统', 'food'], ['饮食装备', 'food'], ['饮食', 'food'],
+        ['安全装备', 'safety'], ['安全系统', 'safety'], ['安全', 'safety'],
+        ['电子设备', 'electronics'], ['电子系统', 'electronics'], ['电子', 'electronics'],
+        ['其他', 'other'], ['其他装备', 'other'], ['其它', 'other'], ['其它装备', 'other']
+      ]);
+      const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
+      const DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>';
+      const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      const TWO_COLUMN_QUERY = window.matchMedia('(min-width: 1001px)');
+
+      const state = {
+        items: [],
+        editingId: null,
+        formCategory: null,
+        storageOK: true,
+        toastTimer: null,
+        importParsed: null,
+        importDuplicateCount: 0
+      };
+
+      const byId = id => document.getElementById(id);
+      const els = {
+        totalCount: byId('total-count'),
+        totalWeight: byId('total-weight'),
+        totalValue: byId('total-value'),
+        donut: byId('donut'),
+        donutCount: byId('donut-count'),
+        categoryLegend: byId('category-legend'),
+        itemCountNote: byId('item-count-note'),
+        gearGroups: byId('gear-groups'),
+        exportImage: byId('export-image'),
+        exportImageLabel: byId('export-image-label'),
+        exportCsv: byId('export-csv'),
+        exportCsvLabel: byId('export-csv-label'),
+        clearList: byId('clear-list'),
+        storageWarning: byId('storage-warning'),
+        weightFoot: byId('weight-foot'),
+        valueFoot: byId('value-foot'),
+        toast: byId('toast'),
+        openImport: byId('open-import'),
+        importDialog: byId('import-dialog'),
+        importText: byId('import-text'),
+        importSummary: byId('import-summary'),
+        importPreviewList: byId('import-preview-list'),
+        importError: byId('import-error'),
+        importSubmit: byId('import-submit'),
+        importCancel: byId('import-cancel'),
+        importClose: byId('import-close')
+      };
+
+      function init() {
+        bindEvents();
+        state.items = loadItems();
+        renderAll();
+      }
+
+      function bindEvents() {
+        els.gearGroups.addEventListener('click', handleGroupAction);
+        els.exportImage.addEventListener('click', exportLongImage);
+        els.exportCsv.addEventListener('click', exportCsv);
+        els.clearList.addEventListener('click', clearAllItems);
+        els.openImport.addEventListener('click', openImportDialog);
+        els.importClose.addEventListener('click', closeImportDialog);
+        els.importCancel.addEventListener('click', closeImportDialog);
+        els.importText.addEventListener('input', updateImportPreview);
+        els.importSubmit.addEventListener('click', commitImport);
+        els.importDialog.addEventListener('click', event => {
+          if (event.target === els.importDialog) closeImportDialog();
+        });
+        els.importDialog.addEventListener('close', resetImportDialog);
+        TWO_COLUMN_QUERY.addEventListener('change', renderAll);
+      }
+
+      function loadItems() {
+        try {
+          const probeKey = `${STORAGE_KEY}.probe`;
+          localStorage.setItem(probeKey, '1');
+          localStorage.removeItem(probeKey);
+        } catch (error) {
+          markStorageUnavailable();
+          return [];
+        }
+
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return [];
+          return parsed.map(sanitizeItem).filter(Boolean);
+        } catch (error) {
+          console.warn('无法读取装备清单数据：', error);
+          return [];
+        }
+      }
+
+      function sanitizeItem(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        const name = typeof raw.name === 'string' ? raw.name.trim().slice(0, 80) : '';
+        const category = CATEGORY_MAP.has(raw.category) ? raw.category : 'other';
+        const rawWeight = raw.weightG === null || raw.weightG === undefined || raw.weightG === '' ? null : Number(raw.weightG);
+        const rawPrice = raw.price === null || raw.price === undefined || raw.price === '' ? null : Number(raw.price);
+        const weightG = rawWeight !== null && Number.isFinite(rawWeight) && rawWeight > 0 ? roundWeight(rawWeight) : null;
+        const price = rawPrice !== null && Number.isFinite(rawPrice) && rawPrice >= 0 ? roundPrice(rawPrice) : null;
+        if (!name) return null;
+        return {
+          id: typeof raw.id === 'string' && raw.id ? raw.id : makeId(),
+          category,
+          name,
+          weightG,
+          price
+        };
+      }
+
+      function saveItems() {
+        if (!state.storageOK) return;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+        } catch (error) {
+          console.warn('无法保存装备清单：', error);
+          markStorageUnavailable();
+          showToast('本地存储不可用，本次修改仅在当前页面有效。', true);
+        }
+      }
+
+      function markStorageUnavailable() {
+        state.storageOK = false;
+        els.storageWarning.hidden = false;
+      }
+
+      function makeId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+          return window.crypto.randomUUID();
+        }
+        return `gear-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      function roundWeight(value) { return Math.round(value * 10) / 10; }
+      function roundPrice(value) { return Math.round(value * 100) / 100; }
+
+      function computeStats() {
+        const categories = CATEGORIES.map(category => ({
+          ...category,
+          items: [],
+          count: 0,
+          weightG: 0,
+          value: 0,
+          missingWeightCount: 0,
+          missingPriceCount: 0,
+          pendingItemCount: 0,
+          weightShare: 0,
+          valueShare: 0
+        }));
+        const byKey = new Map(categories.map(category => [category.key, category]));
+
+        state.items.forEach(item => {
+          const category = byKey.get(item.category) || byKey.get('other');
+          category.items.push(item);
+          category.count += 1;
+          if (Number.isFinite(item.weightG)) category.weightG += item.weightG;
+          else category.missingWeightCount += 1;
+          if (Number.isFinite(item.price)) category.value += item.price;
+          else category.missingPriceCount += 1;
+          if (!Number.isFinite(item.weightG) || !Number.isFinite(item.price)) category.pendingItemCount += 1;
+        });
+
+        const totalCount = state.items.length;
+        const totalWeightG = categories.reduce((sum, category) => sum + category.weightG, 0);
+        const totalValue = categories.reduce((sum, category) => sum + category.value, 0);
+        const missingWeightCount = categories.reduce((sum, category) => sum + category.missingWeightCount, 0);
+        const missingPriceCount = categories.reduce((sum, category) => sum + category.missingPriceCount, 0);
+        const pendingItemCount = categories.reduce((sum, category) => sum + category.pendingItemCount, 0);
+
+        categories.forEach(category => {
+          category.weightShare = totalWeightG > 0 ? category.weightG / totalWeightG : 0;
+          category.valueShare = totalValue > 0 ? category.value / totalValue : 0;
+        });
+
+        return {
+          totalCount,
+          totalWeightG,
+          totalValue,
+          missingWeightCount,
+          missingPriceCount,
+          pendingItemCount,
+          categories,
+          activeCategories: categories.filter(category => category.count > 0)
+        };
+      }
+
+      function renderAll() {
+        const stats = computeStats();
+        renderSummary(stats);
+        renderGroups(stats);
+        updateActionButtons(stats.totalCount);
+      }
+
+      function renderSummary(stats) {
+        els.totalCount.textContent = formatInteger(stats.totalCount);
+        els.totalWeight.textContent = formatFixed(stats.totalWeightG / 1000, 2);
+        els.totalValue.textContent = formatPrice(stats.totalValue);
+        els.donutCount.textContent = formatInteger(stats.totalCount);
+        els.itemCountNote.textContent = `${formatInteger(stats.totalCount)} 件装备`;
+        els.weightFoot.textContent = stats.missingWeightCount
+          ? `已填合计 · ${formatInteger(stats.missingWeightCount)} 件待补充`
+          : '全部装备重量合计';
+        els.valueFoot.textContent = stats.missingPriceCount
+          ? `已填合计 · ${formatInteger(stats.missingPriceCount)} 件待补充`
+          : '按录入价格计算';
+        els.weightFoot.classList.toggle('pending', stats.missingWeightCount > 0);
+        els.valueFoot.classList.toggle('pending', stats.missingPriceCount > 0);
+
+        const gradientParts = [];
+        let cursor = 0;
+        const weightedCategories = stats.activeCategories.filter(category => category.weightG > 0);
+        weightedCategories.forEach(category => {
+          const start = cursor;
+          cursor += stats.totalWeightG > 0 ? category.weightG / stats.totalWeightG * 100 : 0;
+          gradientParts.push(`${category.color} ${start.toFixed(3)}% ${cursor.toFixed(3)}%`);
+        });
+
+        if (gradientParts.length && stats.totalWeightG > 0) {
+          const finalColor = weightedCategories[weightedCategories.length - 1].color;
+          els.donut.style.background = `conic-gradient(${gradientParts.join(', ')}, ${finalColor} 100%)`;
+          const pendingNote = stats.missingWeightCount ? `，另有 ${stats.missingWeightCount} 件重量待补充` : '';
+          els.donut.setAttribute('aria-label', `装备分类重量占比：${weightedCategories.map(category => `${category.name} ${formatPercent(category.weightShare)}`).join('，')}${pendingNote}`);
+        } else {
+          els.donut.style.background = 'conic-gradient(#e8ece4 0 100%)';
+          els.donut.setAttribute('aria-label', stats.missingWeightCount ? '装备分类重量占比：重量信息待补充' : '装备分类重量占比：暂无数据');
+        }
+
+        els.categoryLegend.replaceChildren();
+        if (!stats.activeCategories.length) {
+          const empty = document.createElement('p');
+          empty.className = 'legend-empty';
+          empty.textContent = '添加装备后，这里会显示各类别的重量占比。';
+          els.categoryLegend.appendChild(empty);
+          return;
+        }
+
+        stats.activeCategories.forEach(category => {
+          const row = document.createElement('div');
+          row.className = 'legend-row';
+          const pendingPart = category.missingWeightCount || category.missingPriceCount
+            ? ` · ${category.pendingItemCount} 件信息待补充`
+            : '';
+          row.title = `${category.name}：${formatItemWeight(category.weightG)} · ${formatPrice(category.value)}${pendingPart}`;
+
+          const dot = document.createElement('span');
+          dot.className = 'legend-dot';
+          dot.style.setProperty('--legend-color', category.color);
+
+          const name = document.createElement('span');
+          name.className = 'legend-name';
+          name.textContent = category.name;
+
+          const value = document.createElement('span');
+          value.className = 'legend-value';
+          value.textContent = category.weightG > 0 ? formatPercent(category.weightShare) : '—';
+
+          row.append(dot, name, value);
+          els.categoryLegend.appendChild(row);
+        });
+
+        if (stats.missingWeightCount) {
+          const row = document.createElement('div');
+          row.className = 'legend-row legend-pending';
+          row.title = '这些装备尚未填写重量，暂不计入重量占比';
+
+          const dot = document.createElement('span');
+          dot.className = 'legend-dot';
+          dot.style.setProperty('--legend-color', '#c88c3f');
+
+          const name = document.createElement('span');
+          name.className = 'legend-name';
+          name.textContent = '重量待补充';
+
+          const value = document.createElement('span');
+          value.className = 'legend-value';
+          value.textContent = `${formatInteger(stats.missingWeightCount)} 件`;
+
+          row.append(dot, name, value);
+          els.categoryLegend.appendChild(row);
+        }
+      }
+
+      function renderGroups(stats) {
+        els.gearGroups.replaceChildren();
+        const cards = [];
+
+        stats.categories.forEach(category => {
+          const formOpen = state.formCategory === category.key;
+          const card = document.createElement('section');
+          card.className = 'group-card';
+          if (formOpen) card.classList.add('form-open');
+          card.style.setProperty('--cat', category.color);
+          card.style.setProperty('--cat-soft', category.soft);
+          card.setAttribute('aria-labelledby', `group-${category.key}`);
+
+          const head = document.createElement('div');
+          head.className = 'group-head';
+
+          const titleWrap = document.createElement('div');
+          titleWrap.className = 'group-title-wrap';
+
+          const icon = document.createElement('div');
+          icon.className = 'category-icon';
+          icon.textContent = category.short;
+          icon.setAttribute('aria-hidden', 'true');
+
+          const title = document.createElement('div');
+          title.className = 'group-title';
+          const heading = document.createElement('h3');
+          heading.id = `group-${category.key}`;
+          heading.textContent = category.name;
+          const sub = document.createElement('div');
+          sub.className = 'group-sub';
+          const pendingPart = category.pendingItemCount
+            ? ` · ${formatInteger(category.pendingItemCount)} 件信息待补充`
+            : '';
+          sub.textContent = `${formatInteger(category.count)} 件装备 · 重量占比 ${formatPercent(category.weightShare)}${pendingPart}`;
+          title.append(heading, sub);
+          titleWrap.append(icon, title);
+
+          const groupStats = document.createElement('div');
+          groupStats.className = 'group-stats';
+          appendGroupStat(groupStats, '件数', `${formatInteger(category.count)} 件`);
+          appendGroupStat(groupStats, '重量', formatItemWeight(category.weightG));
+          appendGroupStat(groupStats, '价值', formatPrice(category.value));
+
+          head.append(titleWrap, groupStats);
+
+          const progress = document.createElement('div');
+          progress.className = 'group-progress';
+          progress.setAttribute('aria-hidden', 'true');
+          const progressFill = document.createElement('span');
+          progressFill.style.width = `${Math.max(0, Math.min(100, category.weightShare * 100))}%`;
+          progress.appendChild(progressFill);
+
+          const table = document.createElement('div');
+          table.className = 'item-table';
+          const columns = document.createElement('div');
+          columns.className = 'item-head';
+          ['装备名称', '重量 (kg)', '价格', ''].forEach(label => {
+            const span = document.createElement('span');
+            span.textContent = label;
+            columns.appendChild(span);
+          });
+          table.appendChild(columns);
+
+          if (category.items.length) {
+            category.items.forEach(item => table.appendChild(createItemRow(item)));
+          } else {
+            const empty = document.createElement('div');
+            empty.className = 'category-empty';
+            empty.textContent = '暂无装备，可从下方直接添加';
+            table.appendChild(empty);
+          }
+
+          const editingItem = formOpen && state.editingId
+            ? category.items.find(item => item.id === state.editingId)
+            : null;
+
+          card.append(head, progress, table);
+          card.append(formOpen ? buildInlineForm(category, editingItem) : buildQuickAdd(category));
+          cards.push(card);
+        });
+
+        appendGearCards(cards);
+      }
+
+      function createGearColumn(cards) {
+        const column = document.createElement('div');
+        column.className = 'gear-column';
+        column.append(...cards);
+        return column;
+      }
+
+      function measureGearCards(cards) {
+        const gap = 16;
+        const width = Math.max(260, Math.floor((els.gearGroups.clientWidth - gap) / 2));
+        const holder = document.createElement('div');
+        holder.style.cssText = `position:fixed;left:-10000px;top:0;width:${width}px;visibility:hidden;pointer-events:none;z-index:-1;`;
+        cards.forEach(card => holder.appendChild(card));
+        document.body.appendChild(holder);
+        const heights = cards.map(card => card.getBoundingClientRect().height);
+        holder.remove();
+        return heights;
+      }
+
+      function distributeGearCards(heights) {
+        const gap = 16;
+        const totalHeight = heights.reduce((sum, height) => sum + height, 0);
+        const targetGap = Math.max(18, Math.min(56, totalHeight / 30));
+        let best = null;
+
+        for (let mask = 1; mask < (1 << heights.length); mask += 1) {
+          if (!(mask & 1)) continue;
+          if (heights.length > 1 && (mask & 2)) continue;
+
+          const left = [];
+          const right = [];
+          let leftHeight = 0;
+          let rightHeight = 0;
+
+          heights.forEach((height, index) => {
+            if (mask & (1 << index)) {
+              left.push(index);
+              leftHeight += height;
+            } else {
+              right.push(index);
+              rightHeight += height;
+            }
+          });
+
+          leftHeight += Math.max(0, left.length - 1) * gap;
+          rightHeight += Math.max(0, right.length - 1) * gap;
+          const difference = leftHeight - rightHeight;
+          const imbalancePenalty = difference < 0 ? totalHeight * 10 + Math.abs(difference) : 0;
+          const score = Math.abs(difference - targetGap) + imbalancePenalty;
+
+          if (!best || score < best.score - .01 || (Math.abs(score - best.score) <= .01 && difference < best.difference)) {
+            best = { left, right, leftHeight, rightHeight, difference, score };
+          }
+        }
+
+        if (!best) return [heights.map((_, index) => index), []];
+        return [best.left, best.right];
+      }
+
+      function appendGearCards(cards) {
+        if (!cards.length) return;
+
+        if (!TWO_COLUMN_QUERY.matches || cards.length === 1) {
+          els.gearGroups.appendChild(createGearColumn(cards));
+          return;
+        }
+
+        const heights = measureGearCards(cards);
+        const [leftIndexes, rightIndexes] = distributeGearCards(heights);
+        const leftCards = leftIndexes.map(index => cards[index]);
+        const rightCards = rightIndexes.map(index => cards[index]);
+        const columns = [createGearColumn(leftCards)];
+        if (rightCards.length) columns.push(createGearColumn(rightCards));
+        els.gearGroups.append(...columns);
+      }
+
+      function buildQuickAdd(category) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'quick-add';
+        button.dataset.action = 'open-add';
+        button.dataset.category = category.key;
+        button.setAttribute('aria-label', `在${category.name}下添加装备`);
+        button.innerHTML = PLUS_ICON;
+        const label = document.createElement('span');
+        label.textContent = `添加到${category.name}`;
+        button.appendChild(label);
+        return button;
+      }
+
+      function buildInlineForm(category, editingItem) {
+        const form = document.createElement('form');
+        form.className = 'inline-form';
+        form.dataset.category = category.key;
+        form.noValidate = true;
+        form.setAttribute('aria-label', `${editingItem ? '编辑' : '添加'}${category.name}装备`);
+
+        const head = document.createElement('div');
+        head.className = 'inline-form-head';
+        const title = document.createElement('strong');
+        title.textContent = editingItem ? '编辑装备' : `添加到${category.name}`;
+        const hint = document.createElement('span');
+        hint.textContent = editingItem ? '重量和价格可暂时留空' : '重量和价格可稍后补充';
+        head.append(title, hint);
+
+        const grid = document.createElement('div');
+        grid.className = 'inline-form-grid';
+
+        const nameField = document.createElement('div');
+        nameField.className = 'field inline-name';
+        const nameLabel = document.createElement('label');
+        nameLabel.htmlFor = `inline-name-${category.key}`;
+        nameLabel.textContent = '装备名称';
+        const nameInput = document.createElement('input');
+        nameInput.className = 'control';
+        nameInput.id = `inline-name-${category.key}`;
+        nameInput.type = 'text';
+        nameInput.maxLength = 80;
+        nameInput.autocomplete = 'off';
+        nameInput.placeholder = '例如：黑鹿纵横 1.5P 帐篷';
+        nameInput.dataset.field = 'name';
+        nameField.append(nameLabel, nameInput);
+
+        const weightField = document.createElement('div');
+        weightField.className = 'field';
+        const weightLabel = document.createElement('label');
+        weightLabel.htmlFor = `inline-weight-${category.key}`;
+        weightLabel.textContent = '重量 (kg)';
+        const compound = document.createElement('div');
+        compound.className = 'compound';
+        const weightInput = document.createElement('input');
+        weightInput.id = `inline-weight-${category.key}`;
+        weightInput.type = 'number';
+        weightInput.min = '0';
+        weightInput.step = '0.001';
+        weightInput.inputMode = 'decimal';
+        weightInput.placeholder = '可留空';
+        weightInput.dataset.field = 'weight';
+        const unitSuffix = document.createElement('span');
+        unitSuffix.className = 'unit-suffix';
+        unitSuffix.textContent = 'kg';
+        compound.append(weightInput, unitSuffix);
+        weightField.append(weightLabel, compound);
+
+        const priceField = document.createElement('div');
+        priceField.className = 'field';
+        const priceLabel = document.createElement('label');
+        priceLabel.htmlFor = `inline-price-${category.key}`;
+        priceLabel.textContent = '价格';
+        const money = document.createElement('div');
+        money.className = 'money-input';
+        const currency = document.createElement('span');
+        currency.textContent = '¥';
+        const priceInput = document.createElement('input');
+        priceInput.id = `inline-price-${category.key}`;
+        priceInput.type = 'number';
+        priceInput.min = '0';
+        priceInput.step = '0.01';
+        priceInput.inputMode = 'decimal';
+        priceInput.placeholder = '可留空';
+        priceInput.dataset.field = 'price';
+        money.append(currency, priceInput);
+        priceField.append(priceLabel, money);
+
+        grid.append(nameField, weightField, priceField);
+
+        const actions = document.createElement('div');
+        actions.className = 'inline-actions';
+        const submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'btn btn-primary';
+        submit.textContent = editingItem ? '保存修改' : '添加装备';
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'btn btn-secondary';
+        cancel.dataset.action = 'cancel-form';
+        cancel.dataset.category = category.key;
+        cancel.textContent = '取消';
+        actions.append(submit, cancel);
+
+        const error = document.createElement('p');
+        error.className = 'inline-error';
+        error.setAttribute('role', 'alert');
+        error.setAttribute('aria-live', 'polite');
+
+        if (editingItem) {
+          nameInput.value = editingItem.name;
+          weightInput.value = Number.isFinite(editingItem.weightG)
+            ? formatRawNumber(editingItem.weightG / 1000, 3)
+            : '';
+          priceInput.value = Number.isFinite(editingItem.price)
+            ? formatRawNumber(editingItem.price, 2)
+            : '';
+        }
+
+        form.append(head, grid, actions, error);
+        form.addEventListener('submit', event => handleInlineSubmit(event, category.key, form));
+        return form;
+      }
+
+      function handleInlineSubmit(event, categoryKey, form) {
+        event.preventDefault();
+        const error = form.querySelector('.inline-error');
+        if (error) error.textContent = '';
+
+        const nameInput = form.querySelector('[data-field="name"]');
+        const weightInput = form.querySelector('[data-field="weight"]');
+        const priceInput = form.querySelector('[data-field="price"]');
+        const name = nameInput.value.trim();
+        const rawWeight = weightInput.value.trim();
+        const rawPrice = priceInput.value.trim();
+
+        if (!name) return showInlineError(error, '请输入装备名称。', nameInput);
+        let weightG = null;
+        if (rawWeight) {
+          const weightValue = Number(rawWeight.replace(',', '.'));
+          if (!Number.isFinite(weightValue) || weightValue <= 0) {
+            return showInlineError(error, '重量必须是大于 0 的数字，留空可稍后补充。', weightInput);
+          }
+          weightG = roundWeight(weightValue * 1000);
+          if (weightG <= 0) return showInlineError(error, '换算后的重量必须大于 0。', weightInput);
+        }
+
+        let price = null;
+        if (rawPrice) {
+          const priceValue = Number(rawPrice.replace(',', '.'));
+          if (!Number.isFinite(priceValue) || priceValue < 0) {
+            return showInlineError(error, '价格必须是大于或等于 0 的数字，留空可稍后补充。', priceInput);
+          }
+          price = roundPrice(priceValue);
+        }
+
+        const payload = {
+          category: categoryKey,
+          name: name.slice(0, 80),
+          weightG,
+          price
+        };
+        const existing = state.editingId
+          ? state.items.find(item => item.id === state.editingId)
+          : null;
+        const wasEditing = Boolean(existing);
+
+        if (existing) Object.assign(existing, payload);
+        else state.items.push({ id: makeId(), ...payload });
+
+        saveItems();
+        state.editingId = null;
+        state.formCategory = wasEditing ? null : categoryKey;
+        renderAll();
+        showToast(wasEditing ? '装备已更新。' : `已添加到${CATEGORY_MAP.get(categoryKey).name}。`);
+
+        if (!wasEditing) requestInlineFocus(categoryKey);
+      }
+
+      function showInlineError(error, message, field) {
+        if (error) error.textContent = message;
+        if (field) field.focus();
+      }
+
+      function requestInlineFocus(categoryKey) {
+        const form = els.gearGroups.querySelector(`form[data-category="${categoryKey}"]`);
+        if (!form) return;
+        const input = form.querySelector('[data-field="name"]');
+        if (input) input.focus({ preventScroll: true });
+        form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function appendGroupStat(container, label, value) {
+        const stat = document.createElement('div');
+        stat.className = 'group-stat';
+        const caption = document.createElement('span');
+        caption.textContent = label;
+        const strong = document.createElement('strong');
+        strong.textContent = value;
+        stat.append(caption, strong);
+        container.appendChild(stat);
+      }
+
+      function createItemRow(item) {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.dataset.id = item.id;
+        const name = document.createElement('div');
+        name.className = 'item-name';
+        name.textContent = item.name;
+        name.title = item.name;
+
+        const weight = document.createElement('div');
+        weight.className = 'item-weight';
+        const hasWeight = Number.isFinite(item.weightG);
+        weight.textContent = hasWeight ? formatItemWeight(item.weightG) : '待补充';
+        if (!hasWeight) {
+          weight.classList.add('pending-value');
+          weight.title = '重量尚未填写';
+        }
+
+        const price = document.createElement('div');
+        price.className = 'item-price';
+        const hasPrice = Number.isFinite(item.price);
+        price.textContent = hasPrice ? formatPrice(item.price) : '待补充';
+        if (!hasPrice) {
+          price.classList.add('pending-value');
+          price.title = '价格尚未填写';
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'row-actions';
+        actions.append(
+          createActionButton('edit', `编辑 ${item.name}`, EDIT_ICON, item.id),
+          createActionButton('delete', `删除 ${item.name}`, DELETE_ICON, item.id)
+        );
+
+        row.append(name, weight, price, actions);
+        return row;
+      }
+
+      function createActionButton(action, label, icon, id) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `icon-btn ${action === 'delete' ? 'delete' : ''}`.trim();
+        button.dataset.action = action;
+        button.dataset.id = id;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.innerHTML = icon;
+        return button;
+      }
+
+      function updateActionButtons(count) {
+        const empty = count === 0;
+        els.exportImage.disabled = empty;
+        els.exportCsv.disabled = empty;
+        els.clearList.disabled = empty;
+      }
+
+      function handleGroupAction(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+
+        if (action === 'open-add') {
+          state.formCategory = button.dataset.category;
+          state.editingId = null;
+          renderAll();
+          requestInlineFocus(state.formCategory);
+          return;
+        }
+
+        if (action === 'cancel-form') {
+          state.formCategory = null;
+          state.editingId = null;
+          renderAll();
+          return;
+        }
+
+        const id = button.dataset.id;
+        const item = state.items.find(entry => entry.id === id);
+        if (!item) return;
+
+        if (action === 'edit') {
+          state.editingId = item.id;
+          state.formCategory = item.category;
+          renderAll();
+          requestInlineFocus(item.category);
+          return;
+        }
+
+        if (action === 'delete') {
+          const confirmed = window.confirm(`确定删除“${item.name}”吗？`);
+          if (!confirmed) return;
+          state.items = state.items.filter(entry => entry.id !== id);
+          if (state.editingId === id) {
+            state.editingId = null;
+            state.formCategory = null;
+          }
+          saveItems();
+          renderAll();
+          showToast('装备已删除。');
+        }
+      }
+
+      function clearAllItems() {
+        if (!state.items.length) return;
+        const confirmed = window.confirm(`确定清空全部 ${state.items.length} 件装备吗？此操作无法撤销。`);
+        if (!confirmed) return;
+        state.items = [];
+        state.editingId = null;
+        state.formCategory = null;
+        saveItems();
+        renderAll();
+        showToast('清单已清空。');
+      }
+
+      function normalizeCategoryHeading(line) {
+        const normalized = String(line ?? '')
+          .replace(/^[\s\u00a0#]+/, '')
+          .replace(/^[\[（(【]\s*/, '')
+          .replace(/\s*[\]）)】]$/, '')
+          .replace(/[\s\u00a0:：#|｜\-–—]+$/g, '')
+          .replace(/[\s\u00a0]/g, '');
+        return CATEGORY_ALIASES.get(normalized) || null;
+      }
+
+      function stripImportMarkers(line) {
+        return String(line ?? '')
+          .replace(/^[\s\u00a0]+/, '')
+          .replace(/^(?:[☑☐✓✔✅❌✘✗□■▢●○◆◇▪▫•·](?:\uFE0F|\u20E3)?\s*)+/u, '')
+          .replace(/^[-–—*+]\s+/, '')
+          .replace(/^\d{1,2}[.)、]\s+/, '')
+          .trim();
+      }
+
+      function parseImportNumber(token) {
+        const text = String(token);
+        return /^\d{1,3}(?:,\d{3})+$/.test(text) ? Number(text.replace(/,/g, '')) : Number(text);
+      }
+
+      function applyPriceSuffix(value, suffix) {
+        const normalized = String(suffix || '').toLowerCase();
+        if (normalized === 'k' || normalized === '千') return value * 1000;
+        if (normalized === 'w' || normalized === '万') return value * 10000;
+        return value;
+      }
+
+      function parseImportWeight(value, unit) {
+        const normalized = String(unit || '').toLowerCase();
+        const grams = normalized === 'kg' || normalized === '千克' || normalized === '公斤'
+          ? value * 1000
+          : value;
+        return Number.isFinite(grams) && grams > 0 ? roundWeight(grams) : null;
+      }
+
+      function extractGearFields(line) {
+        let remaining = String(line || '').trim();
+        let weightG = null;
+        let price = null;
+
+        const pairMatch = remaining.match(/^(.*?)(?:\s+|[,，;；|]+)((?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?))\s*(千克|公斤|kg|克|g)(?![a-z])(?:\s+|[,，;；|]+)[¥￥]?\s*((?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?))\s*(元|k|千|w|万)?\s*$/i);
+        if (pairMatch) {
+          const parsedWeight = parseImportWeight(parseImportNumber(pairMatch[2]), pairMatch[3]);
+          const rawPrice = applyPriceSuffix(parseImportNumber(pairMatch[4]), pairMatch[5]);
+          if (parsedWeight !== null && Number.isFinite(rawPrice) && rawPrice >= 0) {
+            weightG = parsedWeight;
+            price = roundPrice(rawPrice);
+            remaining = pairMatch[1];
+          }
+        }
+
+        if (price === null) {
+          const currencyMatch = remaining.match(/^(.*?)\s*[¥￥]\s*((?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?))\s*(元|k|千|w|万)?\s*$/i);
+          if (currencyMatch) {
+            const rawPrice = applyPriceSuffix(parseImportNumber(currencyMatch[2]), currencyMatch[3]);
+            if (Number.isFinite(rawPrice) && rawPrice >= 0) {
+              price = roundPrice(rawPrice);
+              remaining = currencyMatch[1];
+            }
+          }
+        }
+
+        if (price === null) {
+          const yuanMatch = remaining.match(/^(.*?)(?:\s+|[,，;；|]*)((?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?))\s*元\s*$/i);
+          if (yuanMatch) {
+            const rawPrice = parseImportNumber(yuanMatch[2]);
+            if (Number.isFinite(rawPrice) && rawPrice >= 0) {
+              price = roundPrice(rawPrice);
+              remaining = yuanMatch[1];
+            }
+          }
+        }
+
+        if (weightG === null) {
+          const weightMatch = remaining.match(/^(.*?)(?:\s+|[,，;；|]+)((?:\d{1,3}(?:,\d{3})+|\d+(?:\.\d+)?))\s*(千克|公斤|kg|克|g)(?![a-z])\s*$/i);
+          if (weightMatch) {
+            const parsedWeight = parseImportWeight(parseImportNumber(weightMatch[2]), weightMatch[3]);
+            if (parsedWeight !== null) {
+              weightG = parsedWeight;
+              remaining = weightMatch[1];
+            }
+          }
+        }
+
+        const name = remaining
+          .replace(/^[\s,，;；|:：\-–—]+/, '')
+          .replace(/[\s,，;；|:：\-–—]+$/, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 80);
+
+        return { name, weightG, price };
+      }
+
+      function parseGearText(text) {
+        const source = String(text ?? '').replace(/^﻿/, '').replace(/\r\n?/g, '\n');
+        const items = [];
+        let currentCategory = 'other';
+        let ignoredLines = 0;
+
+        source.split('\n').forEach(rawLine => {
+          const trimmed = rawLine.trim();
+          if (!trimmed) return;
+
+          let categoryKey = normalizeCategoryHeading(trimmed);
+          if (categoryKey) {
+            currentCategory = categoryKey;
+            return;
+          }
+
+          const cleaned = stripImportMarkers(trimmed);
+          if (!cleaned) {
+            ignoredLines += 1;
+            return;
+          }
+
+          categoryKey = normalizeCategoryHeading(cleaned);
+          if (categoryKey) {
+            currentCategory = categoryKey;
+            return;
+          }
+
+          const parsed = extractGearFields(cleaned);
+          if (!parsed.name) {
+            ignoredLines += 1;
+            return;
+          }
+
+          items.push({
+            category: currentCategory,
+            name: parsed.name,
+            weightG: parsed.weightG,
+            price: parsed.price
+          });
+        });
+
+        return {
+          items,
+          ignoredLines,
+          missingWeightCount: items.filter(item => !Number.isFinite(item.weightG)).length,
+          missingPriceCount: items.filter(item => !Number.isFinite(item.price)).length
+        };
+      }
+
+      function importedItemKey(item) {
+        return `${item.category}\u0000${String(item.name).trim().toLowerCase()}`;
+      }
+
+      function countDuplicateImports(items) {
+        const existingKeys = new Set(state.items.map(importedItemKey));
+        return items.filter(item => existingKeys.has(importedItemKey(item))).length;
+      }
+
+      function openImportDialog() {
+        resetImportDialog();
+        if (!els.importDialog.open) els.importDialog.showModal();
+        window.requestAnimationFrame(() => els.importText.focus());
+      }
+
+      function closeImportDialog() {
+        if (els.importDialog.open) els.importDialog.close();
+      }
+
+      function resetImportDialog() {
+        state.importParsed = null;
+        state.importDuplicateCount = 0;
+        els.importText.value = '';
+        els.importSummary.textContent = '粘贴文本后自动解析';
+        els.importError.textContent = '';
+        els.importSubmit.disabled = true;
+        renderImportPreview();
+      }
+
+      function updateImportPreview() {
+        els.importError.textContent = '';
+        const parsed = parseGearText(els.importText.value);
+        const duplicateCount = countDuplicateImports(parsed.items);
+        state.importParsed = parsed;
+        state.importDuplicateCount = duplicateCount;
+        els.importSubmit.disabled = parsed.items.length === 0;
+
+        if (!els.importText.value.trim()) {
+          els.importSummary.textContent = '粘贴文本后自动解析';
+        } else if (!parsed.items.length) {
+          els.importSummary.textContent = '未识别到装备，请检查分类和内容';
+        } else {
+          const details = [`已识别 ${formatInteger(parsed.items.length)} 件`];
+          if (parsed.missingWeightCount) details.push(`${formatInteger(parsed.missingWeightCount)} 件缺重量`);
+          if (parsed.missingPriceCount) details.push(`${formatInteger(parsed.missingPriceCount)} 件缺价格`);
+          if (duplicateCount) details.push(`${formatInteger(duplicateCount)} 件同名`);
+          if (parsed.ignoredLines) details.push(`忽略 ${formatInteger(parsed.ignoredLines)} 行`);
+          els.importSummary.textContent = details.join(' · ');
+        }
+
+        renderImportPreview(parsed);
+      }
+
+      function renderImportPreview(parsed = state.importParsed) {
+        els.importPreviewList.replaceChildren();
+        if (!parsed || !parsed.items.length) {
+          const empty = document.createElement('p');
+          empty.className = 'import-preview-empty';
+          empty.textContent = els.importText.value.trim()
+            ? '没有识别到可用装备。请确认每行至少包含装备名称。'
+            : '还没有可预览的装备。';
+          els.importPreviewList.appendChild(empty);
+          return;
+        }
+
+        const existingKeys = new Set(state.items.map(importedItemKey));
+        const fragment = document.createDocumentFragment();
+
+        CATEGORIES.forEach(category => {
+          const categoryItems = parsed.items.filter(item => item.category === category.key);
+          if (!categoryItems.length) return;
+
+          const group = document.createElement('section');
+          group.className = 'import-group';
+
+          const head = document.createElement('div');
+          head.className = 'import-group-head';
+          const name = document.createElement('span');
+          name.textContent = category.name;
+          name.style.color = category.color;
+          const count = document.createElement('span');
+          count.textContent = `${formatInteger(categoryItems.length)} 件`;
+          head.append(name, count);
+
+          const rows = document.createElement('div');
+          categoryItems.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'import-item';
+
+            const nameWrap = document.createElement('div');
+            nameWrap.className = 'import-name-wrap';
+            const itemName = document.createElement('span');
+            itemName.className = 'import-item-name';
+            itemName.textContent = item.name;
+            nameWrap.appendChild(itemName);
+            if (existingKeys.has(importedItemKey(item))) {
+              const duplicate = document.createElement('span');
+              duplicate.className = 'import-duplicate';
+              duplicate.textContent = '同名';
+              nameWrap.appendChild(duplicate);
+            }
+
+            const weight = document.createElement('span');
+            weight.className = `import-item-value weight${Number.isFinite(item.weightG) ? '' : ' pending'}`;
+            weight.textContent = Number.isFinite(item.weightG) ? formatItemWeight(item.weightG) : '重量待补充';
+
+            const price = document.createElement('span');
+            price.className = `import-item-value price${Number.isFinite(item.price) ? '' : ' pending'}`;
+            price.textContent = Number.isFinite(item.price) ? formatPrice(item.price) : '价格待补充';
+
+            row.append(nameWrap, weight, price);
+            rows.appendChild(row);
+          });
+
+          group.append(head, rows);
+          fragment.appendChild(group);
+        });
+
+        els.importPreviewList.appendChild(fragment);
+      }
+
+      function commitImport() {
+        const parsed = state.importParsed;
+        if (!parsed || !parsed.items.length) {
+          els.importError.textContent = '没有可导入的装备。';
+          return;
+        }
+
+        const items = parsed.items.map(item => ({ id: makeId(), ...item }));
+        const missingWeightCount = parsed.missingWeightCount;
+        const missingPriceCount = parsed.missingPriceCount;
+        state.items.push(...items);
+        saveItems();
+        renderAll();
+        closeImportDialog();
+
+        const details = [];
+        if (missingWeightCount) details.push(`${formatInteger(missingWeightCount)} 件重量`);
+        if (missingPriceCount) details.push(`${formatInteger(missingPriceCount)} 件价格`);
+        const pendingText = details.length ? `，其中 ${details.join('、')}待补充` : '';
+        showToast(`已追加导入 ${formatInteger(items.length)} 件装备${pendingText}。`);
+      }
+
+      function showToast(message, isError = false) {
+        window.clearTimeout(state.toastTimer);
+        els.toast.textContent = message;
+        els.toast.classList.toggle('error', isError);
+        els.toast.classList.add('show');
+        state.toastTimer = window.setTimeout(() => {
+          els.toast.classList.remove('show');
+        }, 2600);
+      }
+
+      function formatInteger(value) {
+        return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 }).format(Number(value) || 0);
+      }
+
+      function formatFixed(value, digits) {
+        return new Intl.NumberFormat('zh-CN', {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        }).format(Number(value) || 0);
+      }
+
+      function formatNumber(value, maximumFractionDigits = 2) {
+        return new Intl.NumberFormat('zh-CN', {
+          maximumFractionDigits
+        }).format(Number(value) || 0);
+      }
+
+      function formatPrice(value) {
+        if (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) return '待补充';
+        return `¥${formatNumber(value, 2)}`;
+      }
+
+      function formatItemWeight(weightG) {
+        if (weightG === null || weightG === undefined || weightG === '' || !Number.isFinite(Number(weightG))) return '待补充';
+        const grams = Number(weightG);
+        return `${formatNumber(grams / 1000, 3)} kg`;
+      }
+
+      function formatPercent(value) {
+        const percent = (Number(value) || 0) * 100;
+        const rounded = Math.round(percent * 10) / 10;
+        return `${new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 1 }).format(rounded)}%`;
+      }
+
+      function formatRawNumber(value, maximumFractionDigits = 2) {
+        if (value === null || value === undefined || value === '' || !Number.isFinite(Number(value))) return '';
+        const safe = Number(value);
+        return safe.toFixed(maximumFractionDigits).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+      }
+
+      function pad2(value) { return String(value).padStart(2, '0'); }
+
+      function getDateStamp(date = new Date()) {
+        return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+      }
+
+      function getDisplayDate(date = new Date()) {
+        return `${date.getFullYear()}.${pad2(date.getMonth() + 1)}.${pad2(date.getDate())}`;
+      }
+
+      function csvCell(value) {
+        const text = String(value ?? '');
+        return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.style.display = 'none';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1600);
+      }
+
+      function exportCsv() {
+        if (!state.items.length) return;
+        const stats = computeStats();
+        const rows = [['分类', '装备名称', '重量(kg)', '价格(元)']];
+        stats.activeCategories.forEach(category => {
+          category.items.forEach(item => {
+            rows.push([
+              category.name,
+              item.name,
+              Number.isFinite(item.weightG) ? formatRawNumber(item.weightG / 1000, 3) : '',
+              Number.isFinite(item.price) ? formatRawNumber(item.price, 2) : ''
+            ]);
+          });
+        });
+
+        const csv = rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+        try {
+          downloadBlob(
+            new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }),
+            `装备清单_${getDateStamp()}.csv`
+          );
+          showToast('CSV 已导出。');
+        } catch (error) {
+          console.error('CSV 导出失败：', error);
+          showToast('CSV 导出失败，请重试。', true);
+        }
+      }
+
+      async function exportLongImage() {
+        if (!state.items.length) return;
+        const button = els.exportImage;
+        button.disabled = true;
+        els.exportImageLabel.textContent = '正在生成…';
+
+        try {
+          if (document.fonts && document.fonts.ready) await document.fonts.ready;
+          const canvas = renderPosterCanvas(computeStats());
+          const blob = await canvasToBlob(canvas);
+          downloadBlob(blob, `装备清单_${getDateStamp()}.png`);
+          showToast('清单长图已导出。');
+        } catch (error) {
+          console.error('长图生成失败：', error);
+          showToast('长图生成失败，请重试。', true);
+        } finally {
+          els.exportImageLabel.textContent = '导出长图';
+          button.disabled = state.items.length === 0;
+        }
+      }
+
+      function canvasToBlob(canvas) {
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas 无法生成 PNG 数据。'));
+          }, 'image/png');
+        });
+      }
+
+      const POSTER = Object.freeze({
+        width: 1200,
+        margin: 64,
+        scale: 2,
+        gap: 24,
+        summaryTop: 202,
+        summaryHeight: 250,
+        categoriesTop: 518,
+        footerHeight: 76
+      });
+      const POSTER_FONT = '"Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif';
+      const POSTER_NUMBER_FONT = '"Bahnschrift", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif';
+
+      function setCanvasFont(ctx, size, weight = 400, numeric = false) {
+        ctx.font = `${weight} ${size}px ${numeric ? POSTER_NUMBER_FONT : POSTER_FONT}`;
+      }
+
+      function drawCanvasText(ctx, text, x, y, options = {}) {
+        const {
+          size = 14,
+          weight = 400,
+          color = '#17231b',
+          align = 'left',
+          baseline = 'alphabetic',
+          numeric = false
+        } = options;
+        setCanvasFont(ctx, size, weight, numeric);
+        ctx.fillStyle = color;
+        ctx.textAlign = align;
+        ctx.textBaseline = baseline;
+        ctx.fillText(String(text ?? ''), x, y);
+      }
+
+      function roundedRectPath(ctx, x, y, width, height, radius) {
+        const safeRadius = Math.max(0, Math.min(radius, width / 2, height / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + safeRadius, y);
+        ctx.arcTo(x + width, y, x + width, y + height, safeRadius);
+        ctx.arcTo(x + width, y + height, x, y + height, safeRadius);
+        ctx.arcTo(x, y + height, x, y, safeRadius);
+        ctx.arcTo(x, y, x + width, y, safeRadius);
+        ctx.closePath();
+      }
+
+      function fillRoundedRect(ctx, x, y, width, height, radius, fill) {
+        roundedRectPath(ctx, x, y, width, height, radius);
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+
+      function strokeRoundedRect(ctx, x, y, width, height, radius, stroke, lineWidth = 1) {
+        roundedRectPath(ctx, x, y, width, height, radius);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+
+      function wrapCanvasText(ctx, text, maxWidth) {
+        const source = String(text ?? '').trim();
+        if (!source) return ['未命名装备'];
+        const lines = [];
+        let line = '';
+
+        Array.from(source).forEach(character => {
+          const candidate = line + character;
+          if (line && ctx.measureText(candidate).width > maxWidth) {
+            lines.push(line);
+            line = character;
+          } else {
+            line = candidate;
+          }
+        });
+
+        if (line) lines.push(line);
+        return lines.length ? lines : ['未命名装备'];
+      }
+
+      function fitCanvasText(ctx, text, maxWidth, maxSize, minSize, weight = 400, numeric = false) {
+        let size = maxSize;
+        while (size > minSize) {
+          setCanvasFont(ctx, size, weight, numeric);
+          if (ctx.measureText(String(text)).width <= maxWidth) break;
+          size -= 1;
+        }
+        setCanvasFont(ctx, size, weight, numeric);
+        return size;
+      }
+
+      function buildCategoryPosterCard(ctx, category, cardWidth) {
+        const nameWidth = cardWidth - 214;
+        setCanvasFont(ctx, 15, 600);
+        const rows = category.items.map(item => {
+          const lines = wrapCanvasText(ctx, item.name, nameWidth);
+          return {
+            item,
+            lines,
+            height: Math.max(40, lines.length * 20 + 18)
+          };
+        });
+        const rowsHeight = rows.reduce((sum, row) => sum + row.height, 0);
+        return {
+          category,
+          rows,
+          height: 144 + rowsHeight + 12
+        };
+      }
+
+      function buildPosterLayout(ctx, stats) {
+        const contentWidth = POSTER.width - POSTER.margin * 2;
+        const cardWidth = Math.floor((contentWidth - POSTER.gap) / 2);
+        const cards = stats.activeCategories.map(category => buildCategoryPosterCard(ctx, category, cardWidth));
+        const pairs = [];
+
+        for (let index = 0; index < cards.length; index += 2) {
+          pairs.push(cards.slice(index, index + 2));
+        }
+
+        let cursorY = POSTER.categoriesTop;
+        pairs.forEach(pair => {
+          const pairHeight = Math.max(...pair.map(card => card.height));
+          pair.forEach((card, columnIndex) => {
+            card.x = POSTER.margin + columnIndex * (cardWidth + POSTER.gap);
+            card.y = cursorY;
+            card.width = cardWidth;
+            card.rowHeight = pairHeight;
+          });
+          cursorY += pairHeight + POSTER.gap;
+        });
+
+        const contentBottom = cursorY - POSTER.gap;
+        return {
+          width: POSTER.width,
+          height: Math.max(940, Math.ceil(contentBottom + POSTER.footerHeight)),
+          cardWidth,
+          pairs,
+          contentBottom,
+          stats
+        };
+      }
+
+      function renderPosterCanvas(stats) {
+        const measureContext = document.createElement('canvas').getContext('2d');
+        const layout = buildPosterLayout(measureContext, stats);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(layout.width * POSTER.scale);
+        canvas.height = Math.round(layout.height * POSTER.scale);
+        const ctx = canvas.getContext('2d');
+        ctx.scale(POSTER.scale, POSTER.scale);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        drawPosterBackground(ctx, layout);
+        drawPosterHeader(ctx, layout);
+        drawPosterSummary(ctx, layout);
+        drawPosterSectionHeading(ctx, layout);
+        layout.pairs.flat().forEach(card => drawCategoryCard(ctx, card));
+        drawPosterFooter(ctx, layout);
+        return canvas;
+      }
+
+      function drawPosterBackground(ctx, layout) {
+        const background = ctx.createLinearGradient(0, 0, 0, layout.height);
+        background.addColorStop(0, '#F8FAF5');
+        background.addColorStop(0.34, '#F3F5EF');
+        background.addColorStop(1, '#EFF3EB');
+        ctx.fillStyle = background;
+        ctx.fillRect(0, 0, layout.width, layout.height);
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(47, 125, 81, .055)';
+        ctx.lineWidth = 1;
+        [150, 205, 260, 315, 370].forEach(radius => {
+          ctx.beginPath();
+          ctx.arc(layout.width - 28, 18, radius, Math.PI * .36, Math.PI * 1.04);
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(700, 201);
+        ctx.bezierCurveTo(770, 160, 811, 91, 873, 80);
+        ctx.bezierCurveTo(938, 68, 954, 143, 1012, 144);
+        ctx.bezierCurveTo(1069, 145, 1088, 104, 1136, 103);
+        ctx.lineTo(1136, 201);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(47, 125, 81, .045)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(778, 201);
+        ctx.bezierCurveTo(836, 173, 872, 125, 925, 119);
+        ctx.bezierCurveTo(975, 113, 1019, 166, 1088, 172);
+        ctx.lineTo(1136, 177);
+        ctx.lineTo(1136, 201);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(47, 125, 81, .035)';
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawPosterHeader(ctx, layout) {
+        const x = POSTER.margin;
+        const y = 52;
+        fillRoundedRect(ctx, x, y, 46, 46, 14, '#2F7D51');
+
+        ctx.save();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 31);
+        ctx.lineTo(x + 19, y + 20);
+        ctx.lineTo(x + 25, y + 27);
+        ctx.lineTo(x + 31, y + 18);
+        ctx.lineTo(x + 37, y + 31);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + 32, y + 12, 2.6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        drawCanvasText(ctx, 'GEAR CHECKLIST', x + 61, y + 19, {
+          size: 10.5, weight: 700, color: '#2F7D51'
+        });
+        drawCanvasText(ctx, '本地装备清单 / OFFLINE READY', x + 61, y + 36, {
+          size: 9.5, color: '#8C978E'
+        });
+
+        setCanvasFont(ctx, 49, 800);
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
+        const firstPart = '装备';
+        ctx.fillStyle = '#17231B';
+        ctx.fillText(firstPart, x, 143);
+        const firstWidth = ctx.measureText(firstPart).width;
+        ctx.fillStyle = '#2F7D51';
+        ctx.fillText('清单', x + firstWidth + 5, 143);
+
+        drawCanvasText(ctx, '按 7 大系统分类 · 自动汇总装备重量与价值', x, 174, {
+          size: 13.5, color: '#68736B'
+        });
+
+        const pillWidth = 174;
+        const pillX = layout.width - POSTER.margin - pillWidth;
+        const pillY = 55;
+        ctx.save();
+        ctx.shadowColor = 'rgba(38, 58, 43, .06)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 4;
+        fillRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, 'rgba(255,255,255,.86)');
+        ctx.restore();
+        strokeRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, '#E1E6DC', 1);
+        drawCanvasText(ctx, 'GENERATED', pillX + 16, pillY + 15, {
+          size: 8, weight: 700, color: '#95A097'
+        });
+        drawCanvasText(ctx, getDisplayDate(), pillX + 16, pillY + 30, {
+          size: 13, weight: 600, color: '#27342B', numeric: true
+        });
+      }
+
+      function drawPosterSummary(ctx, layout) {
+        const x = POSTER.margin;
+        const y = POSTER.summaryTop;
+        const width = layout.width - POSTER.margin * 2;
+        const height = POSTER.summaryHeight;
+        const stats = layout.stats;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(38, 58, 43, .08)';
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 9;
+        fillRoundedRect(ctx, x, y, width, height, 26, '#FFFFFF');
+        ctx.restore();
+        strokeRoundedRect(ctx, x, y, width, height, 26, '#E1E6DC', 1);
+
+        drawCanvasText(ctx, '清单总览', x + 28, y + 34, {
+          size: 12, weight: 700, color: '#27342B'
+        });
+        drawCanvasText(ctx, 'OVERVIEW / 实时汇总', x + 102, y + 34, {
+          size: 9, weight: 600, color: '#96A098'
+        });
+
+        const kpiX = x + 28;
+        const kpiY = y + 58;
+        const kpiWidth = 188;
+        const kpiHeight = 154;
+        const kpiGap = 12;
+        drawSummaryKpi(ctx, kpiX, kpiY, kpiWidth, kpiHeight, {
+          label: '装备数量',
+          value: formatInteger(stats.totalCount),
+          unit: '件',
+          foot: '当前清单已录入',
+          color: '#2F7D51'
+        });
+        drawSummaryKpi(ctx, kpiX + kpiWidth + kpiGap, kpiY, kpiWidth, kpiHeight, {
+          label: '装备总重',
+          value: formatFixed(stats.totalWeightG / 1000, 2),
+          unit: 'kg',
+          foot: stats.missingWeightCount ? `已填合计 · ${formatInteger(stats.missingWeightCount)} 件待补充` : '全部装备重量合计',
+          color: '#4E7CE7'
+        });
+        drawSummaryKpi(ctx, kpiX + (kpiWidth + kpiGap) * 2, kpiY, kpiWidth, kpiHeight, {
+          label: '装备总价值',
+          value: formatPrice(stats.totalValue),
+          unit: '',
+          foot: stats.missingPriceCount ? `已填合计 · ${formatInteger(stats.missingPriceCount)} 件待补充` : '按录入价格计算',
+          color: '#C08732'
+        });
+
+        ctx.beginPath();
+        ctx.moveTo(x + 674, y + 48);
+        ctx.lineTo(x + 674, y + height - 34);
+        ctx.strokeStyle = '#EDF0EA';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        drawCanvasText(ctx, '重量构成', x + 700, y + 34, {
+          size: 12, weight: 700, color: '#27342B'
+        });
+        drawCanvasText(ctx, 'BY CATEGORY', x + 762, y + 34, {
+          size: 8.5, weight: 700, color: '#96A098'
+        });
+
+        drawSummaryDonut(ctx, x + 750, y + 145, 58, stats.activeCategories, stats.totalCount);
+        drawSummaryLegend(ctx, x + 824, y + 69, x + width - 28, stats.activeCategories);
+      }
+
+      function drawSummaryKpi(ctx, x, y, width, height, options) {
+        fillRoundedRect(ctx, x, y, width, height, 16, '#F8FAF6');
+        strokeRoundedRect(ctx, x, y, width, height, 16, '#E9EDE4', 1);
+
+        ctx.beginPath();
+        ctx.arc(x + 22, y + 24, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = options.color;
+        ctx.fill();
+        drawCanvasText(ctx, options.label, x + 33, y + 28, {
+          size: 10.5, weight: 600, color: '#68746B'
+        });
+
+        const maxValueWidth = width - 36 - (options.unit ? 24 : 0);
+        const valueSize = fitCanvasText(ctx, options.value, maxValueWidth, 32, 20, 700, true);
+        drawCanvasText(ctx, options.value, x + 18, y + 88, {
+          size: valueSize, weight: 700, color: '#17231B', numeric: true
+        });
+        if (options.unit) {
+          const valueWidth = ctx.measureText(options.value).width;
+          drawCanvasText(ctx, options.unit, x + 18 + valueWidth + 5, y + 86, {
+            size: 10.5, color: '#7C877F'
+          });
+        }
+
+        drawCanvasText(ctx, options.foot, x + 18, y + 120, {
+          size: 8.5, color: '#9AA39B'
+        });
+      }
+
+      function drawSummaryDonut(ctx, centerX, centerY, radius, categories, itemCount) {
+        ctx.save();
+        ctx.lineWidth = 17;
+        ctx.lineCap = 'butt';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = '#EDF0EA';
+        ctx.stroke();
+
+        const totalWeight = categories.reduce((sum, category) => sum + category.weightG, 0);
+        let startAngle = -Math.PI / 2;
+        categories.forEach(category => {
+          const angle = totalWeight > 0 ? category.weightG / totalWeight * Math.PI * 2 : 0;
+          const gap = categories.length > 1 && angle > .08 ? .018 : 0;
+          if (angle > 0) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle + gap / 2, startAngle + angle - gap / 2);
+            ctx.strokeStyle = category.color;
+            ctx.stroke();
+          }
+          startAngle += angle;
+        });
+        ctx.restore();
+
+        drawCanvasText(ctx, formatInteger(itemCount), centerX, centerY - 1, {
+          size: 27, weight: 700, color: '#17231B', align: 'center', baseline: 'middle', numeric: true
+        });
+        drawCanvasText(ctx, '件装备', centerX, centerY + 24, {
+          size: 8.5, color: '#8D988F', align: 'center', baseline: 'middle'
+        });
+      }
+
+      function drawSummaryLegend(ctx, x, y, right, categories) {
+        const rowStep = categories.length > 5 ? 18 : 21;
+        categories.forEach((category, index) => {
+          const rowY = y + index * rowStep;
+          ctx.beginPath();
+          ctx.arc(x + 4, rowY - 3.5, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = category.color;
+          ctx.fill();
+          drawCanvasText(ctx, category.name, x + 15, rowY, {
+            size: 11, weight: 500, color: '#68746B'
+          });
+          drawCanvasText(ctx, category.weightG > 0 ? formatPercent(category.weightShare) : '—', right, rowY, {
+            size: 9.5, weight: 600, color: '#27342B', align: 'right', numeric: true
+          });
+        });
+      }
+
+      function drawPosterSectionHeading(ctx, layout) {
+        const x = POSTER.margin;
+        const baseline = 500;
+        fillRoundedRect(ctx, x, baseline - 17, 4, 21, 2, '#2F7D51');
+        drawCanvasText(ctx, '装备明细', x + 15, baseline, {
+          size: 20, weight: 750, color: '#17231B'
+        });
+        drawCanvasText(ctx, `ITEMIZED LOADOUT · ${layout.stats.activeCategories.length} 个分类`, layout.width - POSTER.margin, baseline, {
+          size: 9.5, weight: 600, color: '#8C978E', align: 'right'
+        });
+      }
+
+      function drawCategoryCard(ctx, card) {
+        const { category, x, y, width, height } = card;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(38, 58, 43, .07)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
+        fillRoundedRect(ctx, x, y, width, height, 20, '#FFFFFF');
+        ctx.restore();
+        strokeRoundedRect(ctx, x, y, width, height, 20, '#E2E7DE', 1);
+        fillRoundedRect(ctx, x + 1, y + 17, 4, height - 34, 2, category.color);
+
+        const innerLeft = x + 22;
+        const innerRight = x + width - 22;
+        fillRoundedRect(ctx, innerLeft, y + 20, 40, 40, 12, category.soft);
+        drawCanvasText(ctx, category.short, innerLeft + 20, y + 44, {
+          size: 14, weight: 800, color: category.color, align: 'center', baseline: 'middle'
+        });
+        drawCanvasText(ctx, category.name, innerLeft + 52, y + 46, {
+          size: 17, weight: 700, color: '#202C24'
+        });
+
+        drawCanvasText(ctx, `${formatInteger(category.count)} 件 · ${formatItemWeight(category.weightG)}`, innerRight, y + 43, {
+          size: 10.5, weight: 600, color: '#5C6960', align: 'right', numeric: true
+        });
+        drawCanvasText(ctx, `价值 ${formatPrice(category.value)} · 重量占比 ${formatPercent(category.weightShare)}`, innerRight, y + 63, {
+          size: 9.5, weight: 600, color: category.color, align: 'right'
+        });
+
+        const progressWidth = width - 44;
+        fillRoundedRect(ctx, innerLeft, y + 82, progressWidth, 4, 2, '#EDF0EA');
+        fillRoundedRect(ctx, innerLeft, y + 82, progressWidth * Math.max(0, Math.min(1, category.weightShare)), 4, 2, category.color);
+
+        const weightRight = innerRight - 76;
+        drawCanvasText(ctx, '装备名称', innerLeft, y + 122, {
+          size: 9, weight: 600, color: '#98A199'
+        });
+        drawCanvasText(ctx, '重量 (kg)', weightRight, y + 122, {
+          size: 9, weight: 600, color: '#98A199', align: 'right'
+        });
+        drawCanvasText(ctx, '价格', innerRight, y + 122, {
+          size: 9, weight: 600, color: '#98A199', align: 'right'
+        });
+
+        ctx.beginPath();
+        ctx.moveTo(innerLeft, y + 134);
+        ctx.lineTo(innerRight, y + 134);
+        ctx.strokeStyle = '#EDF0EA';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        let rowTop = y + 144;
+        card.rows.forEach((row, index) => {
+          const rowMiddle = rowTop + row.height / 2 - 1;
+          const nameLines = row.lines;
+          const lineHeight = 20;
+          const nameBlockHeight = nameLines.length * lineHeight;
+          const nameBaseline = rowTop + (row.height - nameBlockHeight) / 2 + 15;
+
+          nameLines.forEach((line, lineIndex) => {
+            drawCanvasText(ctx, line, innerLeft, nameBaseline + lineIndex * lineHeight, {
+              size: 15, weight: 600, color: '#29352C'
+            });
+          });
+          drawCanvasText(ctx, formatItemWeight(row.item.weightG), weightRight, rowMiddle, {
+            size: 11.5, weight: 500, color: '#6C776F', align: 'right', baseline: 'middle', numeric: true
+          });
+          drawCanvasText(ctx, formatPrice(row.item.price), innerRight, rowMiddle, {
+            size: 13, weight: 650, color: '#202C24', align: 'right', baseline: 'middle', numeric: true
+          });
+
+          if (index < card.rows.length - 1) {
+            ctx.beginPath();
+            ctx.moveTo(innerLeft, rowTop + row.height);
+            ctx.lineTo(innerRight, rowTop + row.height);
+            ctx.strokeStyle = '#F0F2ED';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+          rowTop += row.height;
+        });
+      }
+
+      function drawPosterFooter(ctx, layout) {
+        const left = POSTER.margin;
+        const right = layout.width - POSTER.margin;
+        const lineY = layout.height - 50;
+        ctx.beginPath();
+        ctx.moveTo(left, lineY);
+        ctx.lineTo(right, lineY);
+        ctx.strokeStyle = '#DDE3D8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(left + 3, lineY + 22, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#2F7D51';
+        ctx.fill();
+        drawCanvasText(ctx, '装备清单 · 单文件本地生成 · 数据仅保存在当前浏览器', left + 13, lineY + 25, {
+          size: 9.5, color: '#88938A'
+        });
+        drawCanvasText(ctx, `${formatInteger(layout.stats.totalCount)} 件 · ${formatFixed(layout.stats.totalWeightG / 1000, 2)} kg · ${formatPrice(layout.stats.totalValue)}`, right, lineY + 25, {
+          size: 9.5, weight: 600, color: '#66736A', align: 'right', numeric: true
+        });
+      }
+      init();
+    })();
+  </script>
+</body>
+</html>
