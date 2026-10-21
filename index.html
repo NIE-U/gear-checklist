@@ -4,6 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f3f5ef">
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('hiking-gear-theme.v1');
+      document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+    } catch (error) {
+      document.documentElement.dataset.theme = 'light';
+    }
+  </script>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f7d51'/%3E%3Cpath d='M21 25h22l4 27H17l4-27Z' fill='none' stroke='%23fff' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M26 25v-4a6 6 0 0 1 12 0v4' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E">
   <title>装备清单</title>
   <style>
@@ -14,18 +22,77 @@
       --green: #2f7d51;
       --green-strong: #24633f;
       --green-soft: #e9f3ed;
+      --primary: #2f7d51;
+      --primary-hover: #24633f;
+      --on-primary: #ffffff;
       --ink: #17231b;
       --muted: #6c776f;
       --faint: #96a098;
       --line: #e1e6dc;
       --line-strong: #d4dcd0;
+      --track: #edf0ea;
+      --row-hover: #fafbf8;
+      --row-border: #f0f2ed;
+      --row-name: #273329;
       --danger: #b64840;
       --danger-soft: #fff2f0;
       --gold: #ae6a22;
+      --warning-bg: #fff8ec;
+      --warning-border: #ecd8b8;
+      --warning-ink: #80502a;
+      --duplicate-bg: #fff8e9;
+      --duplicate-border: #ead4ad;
+      --duplicate-ink: #95601d;
+      --pending-ink: #9c6a2a;
+      --kpi-bg: linear-gradient(160deg, #f8faf6, #f4f6f1);
+      --kpi-count: #2f7d51;
+      --kpi-weight: #4e7ce7;
+      --kpi-value: #c08732;
+      --inline-form-bg: linear-gradient(180deg, #fbfcfa, #f6f9f4);
+      --modal-head-bg: linear-gradient(145deg, #fbfcf9, #f3f7f1);
       --shadow: 0 20px 60px rgba(38, 58, 43, .075), 0 2px 10px rgba(38, 58, 43, .035);
       --radius-xl: 26px;
       --radius-lg: 18px;
       --radius-md: 12px;
+    }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #0c1210;
+      --surface: #141e18;
+      --surface-soft: #19251e;
+      --green: #79d99e;
+      --green-strong: #98e7b7;
+      --green-soft: #1c3226;
+      --primary: #3a9c63;
+      --primary-hover: #47b374;
+      --on-primary: #f7fff9;
+      --ink: #edf4ef;
+      --muted: #a1afa5;
+      --faint: #78877d;
+      --line: #28372e;
+      --line-strong: #37483d;
+      --track: #223027;
+      --row-hover: #18241d;
+      --row-border: #223028;
+      --row-name: #e4eee7;
+      --danger: #ef8d84;
+      --danger-soft: #3b211f;
+      --gold: #e5b268;
+      --warning-bg: #322618;
+      --warning-border: #57442a;
+      --warning-ink: #efc584;
+      --duplicate-bg: #352b19;
+      --duplicate-border: #5a4829;
+      --duplicate-ink: #f0c675;
+      --pending-ink: #e7b56e;
+      --kpi-bg: linear-gradient(160deg, #18241d, #152019);
+      --kpi-count: #7bdd9f;
+      --kpi-weight: #84a6ff;
+      --kpi-value: #edbd6c;
+      --inline-form-bg: linear-gradient(180deg, #17231c, #141e18);
+      --modal-head-bg: linear-gradient(145deg, #17231c, #131c17);
+      --shadow: 0 20px 60px rgba(0, 0, 0, .34), 0 2px 10px rgba(0, 0, 0, .24);
     }
 
     * { box-sizing: border-box; }
@@ -43,6 +110,13 @@
       text-rendering: optimizeLegibility;
     }
 
+    html[data-theme="dark"] body {
+      background:
+        radial-gradient(circle at 8% 0%, rgba(93, 205, 136, .11), transparent 28rem),
+        radial-gradient(circle at 96% 10%, rgba(210, 167, 92, .055), transparent 26rem),
+        var(--page);
+    }
+
     body::before {
       content: "";
       position: fixed;
@@ -55,7 +129,15 @@
       mask-image: linear-gradient(to bottom, #000 0, transparent 54%);
     }
 
+    html[data-theme="dark"] body::before {
+      opacity: .22;
+      background-image:
+        repeating-radial-gradient(circle at 94% 4%, transparent 0 36px, rgba(105, 196, 136, .08) 37px 38px),
+        repeating-radial-gradient(circle at 2% 28%, transparent 0 54px, rgba(105, 196, 136, .05) 55px 56px);
+    }
+
     ::selection { background: rgba(47, 125, 81, .18); }
+    html[data-theme="dark"] ::selection { background: rgba(121, 217, 158, .25); }
     [hidden] { display: none !important; }
     button, input, select { font: inherit; }
     button { cursor: pointer; }
@@ -147,29 +229,39 @@
 
     .btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      border-color: #cbd4c7;
+      border-color: var(--line-strong);
       box-shadow: 0 8px 22px rgba(38, 58, 43, .08);
     }
 
     .btn:active:not(:disabled) { transform: translateY(0); }
     .btn svg { width: 16px; height: 16px; flex: 0 0 auto; }
     .btn-primary {
-      border-color: var(--green);
-      background: var(--green);
-      color: #fff;
+      border-color: var(--primary);
+      background: var(--primary);
+      color: var(--on-primary);
       box-shadow: 0 10px 24px rgba(47, 125, 81, .18);
     }
 
     .btn-primary:hover:not(:disabled) {
-      border-color: var(--green-strong);
-      background: var(--green-strong);
+      border-color: var(--primary-hover);
+      background: var(--primary-hover);
       box-shadow: 0 12px 26px rgba(47, 125, 81, .22);
     }
 
-    .btn-quiet { background: rgba(255, 255, 255, .55); }
+    .btn-quiet { background: color-mix(in srgb, var(--surface) 58%, transparent); }
     .btn-danger { color: var(--danger); }
-    .btn-danger:hover:not(:disabled) { background: var(--danger-soft); border-color: #edc8c4; }
+    .btn-danger:hover:not(:disabled) { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 42%, var(--line)); }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .theme-icon-sun { display: none; }
+    html[data-theme="dark"] .theme-icon-moon { display: none; }
+    html[data-theme="dark"] .theme-icon-sun { display: block; }
+    html[data-theme="dark"] .btn:hover:not(:disabled) { box-shadow: 0 8px 22px rgba(0, 0, 0, .22); }
+    html[data-theme="dark"] .group-card { box-shadow: 0 14px 38px rgba(0, 0, 0, .22); }
+    html[data-theme="dark"] .group-card.form-open { box-shadow: 0 14px 38px rgba(0, 0, 0, .24), 0 0 0 3px var(--cat-soft); }
+    html[data-theme="dark"] .donut-core { box-shadow: 0 4px 16px rgba(0, 0, 0, .28); }
+    html[data-theme="dark"] .import-dialog::backdrop { background: rgba(0, 0, 0, .64); }
+    html[data-theme="dark"] .import-shell { box-shadow: 0 34px 90px rgba(0, 0, 0, .52), 0 4px 18px rgba(0, 0, 0, .28); }
 
     .storage-warning {
       display: flex;
@@ -177,10 +269,10 @@
       gap: 9px;
       margin-top: 16px;
       padding: 11px 14px;
-      border: 1px solid #ecd8b8;
+      border: 1px solid var(--warning-border);
       border-radius: 12px;
-      background: #fff8ec;
-      color: #80502a;
+      background: var(--warning-bg);
+      color: var(--warning-ink);
       font-size: 12px;
       line-height: 1.6;
     }
@@ -215,6 +307,8 @@
       pointer-events: none;
     }
 
+    html[data-theme="dark"] .summary-card::after { border-color: rgba(121, 217, 158, .06); }
+
     .card-label-row {
       position: relative;
       z-index: 1;
@@ -248,9 +342,9 @@
     .kpi {
       min-width: 0;
       padding: 17px 17px 15px;
-      border: 1px solid #e8ece4;
+      border: 1px solid var(--line);
       border-radius: 17px;
-      background: linear-gradient(160deg, #f8faf6, #f4f6f1);
+      background: var(--kpi-bg);
     }
 
     .kpi-label {
@@ -322,7 +416,7 @@
       width: 150px;
       height: 150px;
       border-radius: 50%;
-      background: conic-gradient(#e8ece4 0 100%);
+      background: conic-gradient(var(--track) 0 100%);
       box-shadow: inset 0 0 0 1px rgba(47, 125, 81, .04);
       transition: background .25s ease;
     }
@@ -335,7 +429,7 @@
       width: 108px;
       height: 108px;
       border-radius: 50%;
-      background: #fff;
+      background: var(--surface);
       box-shadow: 0 4px 16px rgba(38, 58, 43, .07);
     }
 
@@ -382,7 +476,7 @@
       height: 44px;
       border: 1px solid var(--line-strong);
       border-radius: 11px;
-      background: #fff;
+      background: var(--surface);
       color: var(--ink);
       font-size: 13px;
       transition: border-color .18s ease, box-shadow .18s ease;
@@ -421,7 +515,7 @@
     .list-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin: 0 4px 13px; }
     .list-heading-meta { display: flex; align-items: center; gap: 9px; color: var(--faint); font-size: 10px; }
     .list-heading-meta strong { color: var(--muted); font-weight: 650; }
-    .divider-dot { width: 3px; height: 3px; border-radius: 50%; background: #c3cbc0; }
+    .divider-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--line-strong); }
 
     .gear-groups {
       display: flex;
@@ -439,12 +533,22 @@
     .group-card {
       position: relative;
       overflow: hidden;
+      --cat: var(--green);
+      --cat-soft: var(--green-soft);
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: #fff;
+      background: var(--surface);
       box-shadow: 0 14px 38px rgba(38, 58, 43, .055);
       transition: border-color .2s ease, box-shadow .2s ease;
     }
+
+    .group-card[data-category="sleep"] { --cat: var(--cat-sleep); --cat-soft: var(--cat-sleep-soft); }
+    .group-card[data-category="carry"] { --cat: var(--cat-carry); --cat-soft: var(--cat-carry-soft); }
+    .group-card[data-category="clothing"] { --cat: var(--cat-clothing); --cat-soft: var(--cat-clothing-soft); }
+    .group-card[data-category="food"] { --cat: var(--cat-food); --cat-soft: var(--cat-food-soft); }
+    .group-card[data-category="safety"] { --cat: var(--cat-safety); --cat-soft: var(--cat-safety-soft); }
+    .group-card[data-category="electronics"] { --cat: var(--cat-electronics); --cat-soft: var(--cat-electronics-soft); }
+    .group-card[data-category="other"] { --cat: var(--cat-other); --cat-soft: var(--cat-other-soft); }
 
     .group-card.form-open {
       border-color: var(--cat);
@@ -507,7 +611,7 @@
       margin: 0 18px 0 21px;
       overflow: hidden;
       border-radius: 9px;
-      background: #edf0ea;
+      background: var(--track);
     }
 
     .group-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--cat); transition: width .35s ease; }
@@ -525,14 +629,14 @@
       color: var(--faint);
       font-size: 9px;
       letter-spacing: .08em;
-      border-bottom: 1px solid #edf0ea;
+      border-bottom: 1px solid var(--line);
     }
 
     .item-head span:nth-child(2), .item-head span:nth-child(3) { text-align: right; }
-    .item-row { padding: 12px 8px; border-bottom: 1px solid #f0f2ed; border-radius: 9px; transition: background .15s ease; }
+    .item-row { padding: 12px 8px; border-bottom: 1px solid var(--row-border); border-radius: 9px; transition: background .15s ease; }
     .item-row:last-child { border-bottom-color: transparent; }
-    .item-row:hover { background: #fafbf8; }
-    .item-name { min-width: 0; color: #273329; font-size: 13px; font-weight: 560; line-height: 1.55; overflow-wrap: anywhere; }
+    .item-row:hover { background: var(--row-hover); }
+    .item-name { min-width: 0; color: var(--row-name); font-size: 13px; font-weight: 560; line-height: 1.55; overflow-wrap: anywhere; }
     .item-weight, .item-price { text-align: right; font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .item-weight { color: var(--muted); }
     .item-price { color: var(--ink); font-weight: 650; }
@@ -547,7 +651,7 @@
       border: 1px solid transparent;
       border-radius: 9px;
       background: transparent;
-      color: #7e8980;
+      color: var(--faint);
       transition: background .16s ease, border-color .16s ease, color .16s ease;
     }
 
@@ -585,7 +689,7 @@
       min-height: 42px;
       margin: 0 18px 16px 21px;
       padding: 0 12px;
-      border: 1px dashed color-mix(in srgb, var(--cat) 42%, #d9dfd6);
+      border: 1px dashed color-mix(in srgb, var(--cat) 42%, var(--line-strong));
       border-radius: 11px;
       background: var(--cat-soft);
       color: var(--cat);
@@ -596,7 +700,7 @@
 
     .quick-add:hover {
       border-color: var(--cat);
-      background: color-mix(in srgb, var(--cat-soft) 72%, #fff);
+      background: color-mix(in srgb, var(--cat-soft) 72%, var(--surface));
       transform: translateY(-1px);
     }
 
@@ -608,7 +712,7 @@
       border: 1px solid var(--line);
       border-top: 2px solid var(--cat);
       border-radius: 13px;
-      background: linear-gradient(180deg, #fbfcfa, #f6f9f4);
+      background: var(--inline-form-bg);
     }
 
     .inline-form-head {
@@ -658,10 +762,10 @@
       height: 5px;
       margin-right: 5px;
       border-radius: 50%;
-      background: #c88c3f;
+      background: var(--gold);
       vertical-align: 1px;
     }
-    .kpi-foot.pending, .legend-pending .legend-name, .legend-pending .legend-value { color: #9c6a2a; }
+    .kpi-foot.pending, .legend-pending .legend-name, .legend-pending .legend-value { color: var(--pending-ink); }
 
     .import-dialog {
       width: min(780px, calc(100vw - 32px));
@@ -685,9 +789,9 @@
       flex-direction: column;
       max-height: min(88vh, 860px);
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .5);
+      border: 1px solid var(--line);
       border-radius: 24px;
-      background: #fff;
+      background: var(--surface);
       box-shadow: 0 34px 90px rgba(18, 30, 22, .24), 0 4px 18px rgba(18, 30, 22, .08);
     }
 
@@ -698,7 +802,7 @@
       gap: 20px;
       padding: 23px 26px 18px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(145deg, #fbfcf9, #f3f7f1);
+      background: var(--modal-head-bg);
     }
 
     .import-kicker {
@@ -721,13 +825,13 @@
       padding: 0;
       border: 1px solid var(--line);
       border-radius: 11px;
-      background: rgba(255, 255, 255, .78);
+      background: color-mix(in srgb, var(--surface) 76%, transparent);
       color: var(--muted);
       font-size: 21px;
       line-height: 1;
     }
 
-    .import-close:hover { border-color: #cbd4c7; background: #fff; color: var(--ink); }
+    .import-close:hover { border-color: var(--line-strong); background: var(--surface); color: var(--ink); }
     .import-body { min-height: 0; overflow-y: auto; padding: 20px 26px 22px; }
     .import-text-label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 2px 7px; }
     .import-text-label strong { font-size: 12px; }
@@ -741,24 +845,24 @@
       padding: 13px 14px;
       border: 1px solid var(--line-strong);
       border-radius: 14px;
-      background: #fcfdfa;
+      background: var(--surface-soft);
       color: var(--ink);
       font-family: "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
       font-size: 12px;
       line-height: 1.75;
     }
 
-    .import-textarea:focus { outline: 3px solid rgba(47, 125, 81, .12); border-color: var(--green); background: #fff; }
+    .import-textarea:focus { outline: 3px solid color-mix(in srgb, var(--green) 18%, transparent); border-color: var(--green); background: var(--surface); }
     .import-help { margin: 7px 2px 0; color: var(--faint); font-size: 9px; line-height: 1.65; }
 
-    .import-preview { margin-top: 17px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: #fafbf8; }
-    .import-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: #f6f8f3; }
+    .import-preview { margin-top: 17px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-soft); }
+    .import-preview-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface)); }
     .import-preview-head strong { font-size: 11px; }
     .import-preview-head span { color: var(--muted); font-size: 9px; text-align: right; line-height: 1.55; }
     .import-preview-list { max-height: 282px; overflow-y: auto; overscroll-behavior: contain; }
     .import-preview-empty { margin: 0; padding: 28px 18px; color: var(--faint); font-size: 10px; line-height: 1.6; text-align: center; }
     .import-group + .import-group { border-top: 1px solid var(--line); }
-    .import-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 14px; background: rgba(247, 249, 244, .82); color: var(--muted); font-size: 9px; font-weight: 650; }
+    .import-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 14px; background: color-mix(in srgb, var(--surface-soft) 82%, transparent); color: var(--muted); font-size: 9px; font-weight: 650; }
     .import-group-head span:last-child { color: var(--faint); font-weight: 500; }
 
     .import-item {
@@ -767,18 +871,18 @@
       align-items: center;
       gap: 10px;
       padding: 9px 14px;
-      border-top: 1px solid #eef1eb;
+      border-top: 1px solid var(--line);
       font-size: 11px;
     }
 
     .import-name-wrap { display: flex; align-items: center; gap: 7px; min-width: 0; }
     .import-item-name { min-width: 0; overflow-wrap: anywhere; line-height: 1.5; }
-    .import-duplicate { flex: 0 0 auto; padding: 2px 5px; border: 1px solid #ead4ad; border-radius: 5px; background: #fff8e9; color: #95601d; font-size: 8px; font-weight: 650; }
+    .import-duplicate { flex: 0 0 auto; padding: 2px 5px; border: 1px solid var(--duplicate-border); border-radius: 5px; background: var(--duplicate-bg); color: var(--duplicate-ink); font-size: 8px; font-weight: 650; }
     .import-item-value { text-align: right; color: var(--muted); font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .import-item-value.price { color: var(--ink); font-weight: 650; }
-    .import-item-value.pending { color: #a36c25; font-family: "Microsoft YaHei UI", sans-serif; font-weight: 650; }
+    .import-item-value.pending { color: var(--pending-ink); font-family: "Microsoft YaHei UI", sans-serif; font-weight: 650; }
 
-    .import-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 26px 18px; border-top: 1px solid var(--line); background: #fff; }
+    .import-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 26px 18px; border-top: 1px solid var(--line); background: var(--surface); }
     .import-error { flex: 1; margin: 0; color: var(--danger); font-size: 9px; line-height: 1.5; }
     .import-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .import-actions .btn { min-height: 40px; padding: 0 16px; }
@@ -918,6 +1022,11 @@
         <p class="hero-sub">7 大装备系统固定呈现，在对应分类卡片底部直接添加装备，自动汇总重量、价值与分类占比。</p>
       </div>
       <div class="hero-actions" aria-label="清单操作">
+        <button class="btn theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="切换到暗色主题">
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 15.1A8.5 8.5 0 0 1 8.9 3.4 8.5 8.5 0 1 0 20.6 15.1Z"/></svg>
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <span id="theme-label">暗色</span>
+        </button>
         <button class="btn" id="open-import" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9Z"/><path d="M14 3v6h6M8 13h6M8 17h4"/></svg>
           <span>导入文本</span>
@@ -947,17 +1056,17 @@
             <span class="card-note">录入后实时更新</span>
           </div>
           <div class="kpi-grid">
-            <div class="kpi" style="--kpi-color:#2f7d51">
+            <div class="kpi" style="--kpi-color:var(--kpi-count)">
               <div class="kpi-label">装备数量</div>
               <div class="kpi-value"><strong id="total-count">0</strong><span class="unit">件</span></div>
               <span class="kpi-foot">当前清单已录入</span>
             </div>
-            <div class="kpi" style="--kpi-color:#4e7ce7">
+            <div class="kpi" style="--kpi-color:var(--kpi-weight)">
               <div class="kpi-label">装备总重</div>
               <div class="kpi-value"><strong id="total-weight">0.00</strong><span class="unit">kg</span></div>
               <span class="kpi-foot" id="weight-foot">全部装备重量合计</span>
             </div>
-            <div class="kpi" style="--kpi-color:#c08732">
+            <div class="kpi" style="--kpi-color:var(--kpi-value)">
               <div class="kpi-label">装备总价值</div>
               <div class="kpi-value"><strong id="total-value">¥0</strong></div>
               <span class="kpi-foot" id="value-foot">按录入价格计算</span>
@@ -1048,14 +1157,15 @@
       'use strict';
 
       const STORAGE_KEY = 'hiking-gear-list.v1';
+      const THEME_KEY = 'hiking-gear-theme.v1';
       const CATEGORIES = Object.freeze([
-        { key: 'sleep', name: '睡眠系统', short: '睡', color: '#4E7CE7', soft: '#EDF2FE' },
-        { key: 'carry', name: '背负系统', short: '背', color: '#2F8E5C', soft: '#EAF5EE' },
-        { key: 'clothing', name: '服饰系统', short: '服', color: '#D8952D', soft: '#FBF2E4' },
-        { key: 'food', name: '饮食系统', short: '饮', color: '#1D9990', soft: '#E8F6F4' },
-        { key: 'safety', name: '安全装备', short: '安', color: '#D85B55', soft: '#FBECEA' },
-        { key: 'electronics', name: '电子设备', short: '电', color: '#7A66D5', soft: '#F0EEFC' },
-        { key: 'other', name: '其他', short: '其', color: '#6F7C73', soft: '#EFF2EE' }
+        { key: 'sleep', name: '睡眠系统', short: '睡', color: '#4E7CE7', soft: '#EDF2FE', colorDark: '#86A9FF', softDark: '#1B2745' },
+        { key: 'carry', name: '背负系统', short: '背', color: '#2F8E5C', soft: '#EAF5EE', colorDark: '#6FD19A', softDark: '#183025' },
+        { key: 'clothing', name: '服饰系统', short: '服', color: '#D8952D', soft: '#FBF2E4', colorDark: '#F0BB63', softDark: '#352B1B' },
+        { key: 'food', name: '饮食系统', short: '饮', color: '#1D9990', soft: '#E8F6F4', colorDark: '#55D6CB', softDark: '#163330' },
+        { key: 'safety', name: '安全装备', short: '安', color: '#D85B55', soft: '#FBECEA', colorDark: '#F4938C', softDark: '#3A2222' },
+        { key: 'electronics', name: '电子设备', short: '电', color: '#7A66D5', soft: '#F0EEFC', colorDark: '#AC9EFF', softDark: '#29254A' },
+        { key: 'other', name: '其他', short: '其', color: '#6F7C73', soft: '#EFF2EE', colorDark: '#ACBAB0', softDark: '#252E28' }
       ]);
       const CATEGORY_MAP = new Map(CATEGORIES.map(category => [category.key, category]));
       const CATEGORY_ALIASES = new Map([
@@ -1074,6 +1184,7 @@
 
       const state = {
         items: [],
+        theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
         editingId: null,
         formCategory: null,
         storageOK: true,
@@ -1098,6 +1209,8 @@
         exportImageLabel: byId('export-image-label'),
         exportCsv: byId('export-csv'),
         exportCsvLabel: byId('export-csv-label'),
+        themeToggle: byId('theme-toggle'),
+        themeLabel: byId('theme-label'),
         clearList: byId('clear-list'),
         storageWarning: byId('storage-warning'),
         weightFoot: byId('weight-foot'),
@@ -1117,6 +1230,7 @@
       function init() {
         bindEvents();
         state.items = loadItems();
+        applyTheme(state.theme, { persist: false, rerender: false });
         renderAll();
       }
 
@@ -1124,6 +1238,7 @@
         els.gearGroups.addEventListener('click', handleGroupAction);
         els.exportImage.addEventListener('click', exportLongImage);
         els.exportCsv.addEventListener('click', exportCsv);
+        els.themeToggle.addEventListener('click', toggleTheme);
         els.clearList.addEventListener('click', clearAllItems);
         els.openImport.addEventListener('click', openImportDialog);
         els.importClose.addEventListener('click', closeImportDialog);
@@ -1135,6 +1250,59 @@
         });
         els.importDialog.addEventListener('close', resetImportDialog);
         TWO_COLUMN_QUERY.addEventListener('change', renderAll);
+      }
+
+      function applyTheme(theme, options = {}) {
+        const { persist = true, rerender = true } = options;
+        state.theme = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.dataset.theme = state.theme;
+
+        const metaTheme = document.querySelector('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.setAttribute('content', state.theme === 'dark' ? '#0c1210' : '#f3f5ef');
+
+        const dark = state.theme === 'dark';
+        els.themeToggle.setAttribute('aria-pressed', String(dark));
+        els.themeToggle.setAttribute('aria-label', dark ? '切换到浅色主题' : '切换到暗色主题');
+        els.themeLabel.textContent = dark ? '浅色' : '暗色';
+        syncCategoryCssVariables();
+
+        if (persist) {
+          try {
+            localStorage.setItem(THEME_KEY, state.theme);
+          } catch (error) {
+            // Theme still applies for the current session when storage is unavailable.
+          }
+        }
+
+        if (rerender) {
+          const stats = computeStats();
+          renderSummary(stats);
+          updateActionButtons(stats.totalCount);
+        }
+      }
+
+      function toggleTheme() {
+        applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+      }
+
+      function getCategoryTone(category) {
+        return state.theme === 'dark'
+          ? { color: category.colorDark, soft: category.softDark }
+          : { color: category.color, soft: category.soft };
+      }
+
+      function syncCategoryCssVariables() {
+        CATEGORIES.forEach(category => {
+          const tone = getCategoryTone(category);
+          document.documentElement.style.setProperty(`--cat-${category.key}`, tone.color);
+          document.documentElement.style.setProperty(`--cat-${category.key}-soft`, tone.soft);
+        });
+      }
+
+      function getUiThemeTone() {
+        return state.theme === 'dark'
+          ? { donutEmpty: '#223027', pendingDot: '#e5b268' }
+          : { donutEmpty: '#e8ece4', pendingDot: '#c88c3f' };
       }
 
       function loadItems() {
@@ -1204,18 +1372,22 @@
       function roundPrice(value) { return Math.round(value * 100) / 100; }
 
       function computeStats() {
-        const categories = CATEGORIES.map(category => ({
-          ...category,
-          items: [],
-          count: 0,
-          weightG: 0,
-          value: 0,
-          missingWeightCount: 0,
-          missingPriceCount: 0,
-          pendingItemCount: 0,
-          weightShare: 0,
-          valueShare: 0
-        }));
+        const categories = CATEGORIES.map(category => {
+          const tone = getCategoryTone(category);
+          return {
+            ...category,
+            ...tone,
+            items: [],
+            count: 0,
+            weightG: 0,
+            value: 0,
+            missingWeightCount: 0,
+            missingPriceCount: 0,
+            pendingItemCount: 0,
+            weightShare: 0,
+            valueShare: 0
+          };
+        });
         const byKey = new Map(categories.map(category => [category.key, category]));
 
         state.items.forEach(item => {
@@ -1261,6 +1433,7 @@
       }
 
       function renderSummary(stats) {
+        const themeTone = getUiThemeTone();
         els.totalCount.textContent = formatInteger(stats.totalCount);
         els.totalWeight.textContent = formatFixed(stats.totalWeightG / 1000, 2);
         els.totalValue.textContent = formatPrice(stats.totalValue);
@@ -1290,7 +1463,7 @@
           const pendingNote = stats.missingWeightCount ? `，另有 ${stats.missingWeightCount} 件重量待补充` : '';
           els.donut.setAttribute('aria-label', `装备分类重量占比：${weightedCategories.map(category => `${category.name} ${formatPercent(category.weightShare)}`).join('，')}${pendingNote}`);
         } else {
-          els.donut.style.background = 'conic-gradient(#e8ece4 0 100%)';
+          els.donut.style.background = `conic-gradient(${themeTone.donutEmpty} 0 100%)`;
           els.donut.setAttribute('aria-label', stats.missingWeightCount ? '装备分类重量占比：重量信息待补充' : '装备分类重量占比：暂无数据');
         }
 
@@ -1334,7 +1507,7 @@
 
           const dot = document.createElement('span');
           dot.className = 'legend-dot';
-          dot.style.setProperty('--legend-color', '#c88c3f');
+          dot.style.setProperty('--legend-color', themeTone.pendingDot);
 
           const name = document.createElement('span');
           name.className = 'legend-name';
@@ -1357,9 +1530,8 @@
           const formOpen = state.formCategory === category.key;
           const card = document.createElement('section');
           card.className = 'group-card';
+          card.dataset.category = category.key;
           if (formOpen) card.classList.add('form-open');
-          card.style.setProperty('--cat', category.color);
-          card.style.setProperty('--cat-soft', category.soft);
           card.setAttribute('aria-labelledby', `group-${category.key}`);
 
           const head = document.createElement('div');
@@ -1466,31 +1638,19 @@
         return heights;
       }
 
-      function distributeGearCards(heights) {
-        const gap = 16;
+      function distributeCardsByHeight(heights, gap = 16) {
+        if (!heights.length) return [[], []];
+        if (heights.length === 1) return [[0], []];
+
         const totalHeight = heights.reduce((sum, height) => sum + height, 0);
         const targetGap = Math.max(18, Math.min(56, totalHeight / 30));
         let best = null;
 
-        for (let mask = 1; mask < (1 << heights.length); mask += 1) {
-          if (!(mask & 1)) continue;
-          if (heights.length > 1 && (mask & 2)) continue;
-
-          const left = [];
-          const right = [];
-          let leftHeight = 0;
-          let rightHeight = 0;
-
-          heights.forEach((height, index) => {
-            if (mask & (1 << index)) {
-              left.push(index);
-              leftHeight += height;
-            } else {
-              right.push(index);
-              rightHeight += height;
-            }
-          });
-
+        for (let split = 1; split < heights.length; split += 1) {
+          const left = Array.from({ length: split }, (_, index) => index);
+          const right = Array.from({ length: heights.length - split }, (_, index) => split + index);
+          let leftHeight = left.reduce((sum, index) => sum + heights[index], 0);
+          let rightHeight = right.reduce((sum, index) => sum + heights[index], 0);
           leftHeight += Math.max(0, left.length - 1) * gap;
           rightHeight += Math.max(0, right.length - 1) * gap;
           const difference = leftHeight - rightHeight;
@@ -1504,6 +1664,10 @@
 
         if (!best) return [heights.map((_, index) => index), []];
         return [best.left, best.right];
+      }
+
+      function distributeGearCards(heights) {
+        return distributeCardsByHeight(heights, 16);
       }
 
       function getGearLayoutSignature() {
@@ -2092,7 +2256,7 @@
           head.className = 'import-group-head';
           const name = document.createElement('span');
           name.textContent = category.name;
-          name.style.color = category.color;
+          name.style.color = getCategoryTone(category).color;
           const count = document.createElement('span');
           count.textContent = `${formatInteger(categoryItems.length)} 件`;
           head.append(name, count);
@@ -2303,6 +2467,126 @@
       });
       const POSTER_FONT = '"Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif';
       const POSTER_NUMBER_FONT = '"Bahnschrift", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif';
+      const POSTER_PALETTES = Object.freeze({
+        light: Object.freeze({
+          backgroundTop: '#F8FAF5',
+          backgroundMiddle: '#F3F5EF',
+          backgroundBottom: '#EFF3EB',
+          ring: 'rgba(47, 125, 81, .055)',
+          waveStrong: 'rgba(47, 125, 81, .045)',
+          waveSoft: 'rgba(47, 125, 81, .035)',
+          logoBg: '#2F7D51',
+          logoInk: '#FFFFFF',
+          brand: '#2F7D51',
+          eyebrow: '#8C978E',
+          title: '#17231B',
+          titleAccent: '#2F7D51',
+          subtitle: '#68736B',
+          pillBg: 'rgba(255,255,255,.86)',
+          pillBorder: '#E1E6DC',
+          pillLabel: '#95A097',
+          pillValue: '#27342B',
+          pillShadow: 'rgba(38, 58, 43, .06)',
+          summaryShadow: 'rgba(38, 58, 43, .08)',
+          summaryCard: '#FFFFFF',
+          summaryBorder: '#E1E6DC',
+          heading: '#27342B',
+          meta: '#96A098',
+          divider: '#EDF0EA',
+          kpiBg: '#F8FAF6',
+          kpiBorder: '#E9EDE4',
+          kpiLabel: '#68746B',
+          kpiValueText: '#17231B',
+          kpiUnit: '#7C877F',
+          kpiFoot: '#9AA39B',
+          kpiCountColor: '#2F7D51',
+          kpiWeightColor: '#4E7CE7',
+          kpiValueColor: '#C08732',
+          donutTrack: '#EDF0EA',
+          donutCount: '#17231B',
+          donutLabel: '#8D988F',
+          legendName: '#68746B',
+          legendValue: '#27342B',
+          sectionBar: '#2F7D51',
+          sectionTitle: '#17231B',
+          sectionMeta: '#8C978E',
+          categoryShadow: 'rgba(38, 58, 43, .07)',
+          categoryCard: '#FFFFFF',
+          categoryBorder: '#E2E7DE',
+          categoryTitle: '#202C24',
+          categoryStats: '#5C6960',
+          categoryProgress: '#EDF0EA',
+          columnLabel: '#98A199',
+          itemName: '#29352C',
+          itemWeight: '#6C776F',
+          itemPrice: '#202C24',
+          rowDivider: '#F0F2ED',
+          footerLine: '#DDE3D8',
+          footerText: '#88938A',
+          footerTotal: '#66736A'
+        }),
+        dark: Object.freeze({
+          backgroundTop: '#0F1712',
+          backgroundMiddle: '#0C1310',
+          backgroundBottom: '#0A100D',
+          ring: 'rgba(121, 217, 158, .07)',
+          waveStrong: 'rgba(121, 217, 158, .06)',
+          waveSoft: 'rgba(121, 217, 158, .035)',
+          logoBg: '#3F9F69',
+          logoInk: '#F4FFF7',
+          brand: '#7DDDA2',
+          eyebrow: '#7F8F84',
+          title: '#F0F6F2',
+          titleAccent: '#7DDDA2',
+          subtitle: '#A0AFA4',
+          pillBg: 'rgba(22, 34, 27, .94)',
+          pillBorder: '#2A3A30',
+          pillLabel: '#7F9084',
+          pillValue: '#E8F1EA',
+          pillShadow: 'rgba(0, 0, 0, .26)',
+          summaryShadow: 'rgba(0, 0, 0, .34)',
+          summaryCard: '#131D17',
+          summaryBorder: '#2A3930',
+          heading: '#EEF5F0',
+          meta: '#7F8F84',
+          divider: '#243229',
+          kpiBg: '#18241D',
+          kpiBorder: '#26362C',
+          kpiLabel: '#9DAC9F',
+          kpiValueText: '#F1F7F3',
+          kpiUnit: '#93A397',
+          kpiFoot: '#75847A',
+          kpiCountColor: '#7BDD9F',
+          kpiWeightColor: '#84A6FF',
+          kpiValueColor: '#EDBD6C',
+          donutTrack: '#223028',
+          donutCount: '#F1F7F3',
+          donutLabel: '#809085',
+          legendName: '#A3B1A6',
+          legendValue: '#E9F1EB',
+          sectionBar: '#7DDDA2',
+          sectionTitle: '#F0F6F2',
+          sectionMeta: '#7D8C81',
+          categoryShadow: 'rgba(0, 0, 0, .3)',
+          categoryCard: '#131D17',
+          categoryBorder: '#2A3930',
+          categoryTitle: '#EDF5EF',
+          categoryStats: '#9EACA2',
+          categoryProgress: '#223028',
+          columnLabel: '#78877C',
+          itemName: '#E3EDE6',
+          itemWeight: '#9AA99E',
+          itemPrice: '#F0F6F2',
+          rowDivider: '#202C24',
+          footerLine: '#28372D',
+          footerText: '#748379',
+          footerTotal: '#9AA99F'
+        })
+      });
+
+      function getPosterPalette() {
+        return POSTER_PALETTES[state.theme] || POSTER_PALETTES.light;
+      }
 
       function setCanvasFont(ctx, size, weight = 400, numeric = false) {
         ctx.font = `${weight} ${size}px ${numeric ? POSTER_NUMBER_FONT : POSTER_FONT}`;
@@ -2402,31 +2686,33 @@
         const contentWidth = POSTER.width - POSTER.margin * 2;
         const cardWidth = Math.floor((contentWidth - POSTER.gap) / 2);
         const cards = stats.activeCategories.map(category => buildCategoryPosterCard(ctx, category, cardWidth));
-        const pairs = [];
+        const [leftIndexes, rightIndexes] = distributeCardsByHeight(
+          cards.map(card => card.height),
+          POSTER.gap
+        );
+        const columns = [leftIndexes, rightIndexes]
+          .map(indexes => indexes.map(index => cards[index]))
+          .filter(column => column.length);
 
-        for (let index = 0; index < cards.length; index += 2) {
-          pairs.push(cards.slice(index, index + 2));
-        }
-
-        let cursorY = POSTER.categoriesTop;
-        pairs.forEach(pair => {
-          const pairHeight = Math.max(...pair.map(card => card.height));
-          pair.forEach((card, columnIndex) => {
+        let contentBottom = POSTER.categoriesTop - POSTER.gap;
+        columns.forEach((column, columnIndex) => {
+          let cursorY = POSTER.categoriesTop;
+          column.forEach(card => {
             card.x = POSTER.margin + columnIndex * (cardWidth + POSTER.gap);
             card.y = cursorY;
             card.width = cardWidth;
-            card.rowHeight = pairHeight;
+            cursorY += card.height + POSTER.gap;
           });
-          cursorY += pairHeight + POSTER.gap;
+          contentBottom = Math.max(contentBottom, cursorY - POSTER.gap);
         });
 
-        const contentBottom = cursorY - POSTER.gap;
         return {
           width: POSTER.width,
           height: Math.max(940, Math.ceil(contentBottom + POSTER.footerHeight)),
           cardWidth,
-          pairs,
+          columns,
           contentBottom,
+          palette: getPosterPalette(),
           stats
         };
       }
@@ -2446,21 +2732,22 @@
         drawPosterHeader(ctx, layout);
         drawPosterSummary(ctx, layout);
         drawPosterSectionHeading(ctx, layout);
-        layout.pairs.flat().forEach(card => drawCategoryCard(ctx, card));
+        layout.columns.flat().forEach(card => drawCategoryCard(ctx, card, layout.palette));
         drawPosterFooter(ctx, layout);
         return canvas;
       }
 
       function drawPosterBackground(ctx, layout) {
+        const palette = layout.palette;
         const background = ctx.createLinearGradient(0, 0, 0, layout.height);
-        background.addColorStop(0, '#F8FAF5');
-        background.addColorStop(0.34, '#F3F5EF');
-        background.addColorStop(1, '#EFF3EB');
+        background.addColorStop(0, palette.backgroundTop);
+        background.addColorStop(0.34, palette.backgroundMiddle);
+        background.addColorStop(1, palette.backgroundBottom);
         ctx.fillStyle = background;
         ctx.fillRect(0, 0, layout.width, layout.height);
 
         ctx.save();
-        ctx.strokeStyle = 'rgba(47, 125, 81, .055)';
+        ctx.strokeStyle = palette.ring;
         ctx.lineWidth = 1;
         [150, 205, 260, 315, 370].forEach(radius => {
           ctx.beginPath();
@@ -2477,7 +2764,7 @@
         ctx.bezierCurveTo(1069, 145, 1088, 104, 1136, 103);
         ctx.lineTo(1136, 201);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(47, 125, 81, .045)';
+        ctx.fillStyle = palette.waveStrong;
         ctx.fill();
 
         ctx.beginPath();
@@ -2487,18 +2774,19 @@
         ctx.lineTo(1136, 177);
         ctx.lineTo(1136, 201);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(47, 125, 81, .035)';
+        ctx.fillStyle = palette.waveSoft;
         ctx.fill();
         ctx.restore();
       }
 
       function drawPosterHeader(ctx, layout) {
+        const palette = layout.palette;
         const x = POSTER.margin;
         const y = 52;
-        fillRoundedRect(ctx, x, y, 46, 46, 14, '#2F7D51');
+        fillRoundedRect(ctx, x, y, 46, 46, 14, palette.logoBg);
 
         ctx.save();
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeStyle = palette.logoInk;
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -2515,45 +2803,46 @@
         ctx.restore();
 
         drawCanvasText(ctx, 'GEAR CHECKLIST', x + 61, y + 19, {
-          size: 10.5, weight: 700, color: '#2F7D51'
+          size: 10.5, weight: 700, color: palette.brand
         });
         drawCanvasText(ctx, '本地装备清单 / OFFLINE READY', x + 61, y + 36, {
-          size: 9.5, color: '#8C978E'
+          size: 9.5, color: palette.eyebrow
         });
 
         setCanvasFont(ctx, 49, 800);
         ctx.textBaseline = 'alphabetic';
         ctx.textAlign = 'left';
         const firstPart = '装备';
-        ctx.fillStyle = '#17231B';
+        ctx.fillStyle = palette.title;
         ctx.fillText(firstPart, x, 143);
         const firstWidth = ctx.measureText(firstPart).width;
-        ctx.fillStyle = '#2F7D51';
+        ctx.fillStyle = palette.titleAccent;
         ctx.fillText('清单', x + firstWidth + 5, 143);
 
         drawCanvasText(ctx, '按 7 大系统分类 · 自动汇总装备重量与价值', x, 174, {
-          size: 13.5, color: '#68736B'
+          size: 13.5, color: palette.subtitle
         });
 
         const pillWidth = 174;
         const pillX = layout.width - POSTER.margin - pillWidth;
         const pillY = 55;
         ctx.save();
-        ctx.shadowColor = 'rgba(38, 58, 43, .06)';
+        ctx.shadowColor = palette.pillShadow;
         ctx.shadowBlur = 12;
         ctx.shadowOffsetY = 4;
-        fillRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, 'rgba(255,255,255,.86)');
+        fillRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, palette.pillBg);
         ctx.restore();
-        strokeRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, '#E1E6DC', 1);
+        strokeRoundedRect(ctx, pillX, pillY, pillWidth, 38, 12, palette.pillBorder, 1);
         drawCanvasText(ctx, 'GENERATED', pillX + 16, pillY + 15, {
-          size: 8, weight: 700, color: '#95A097'
+          size: 8, weight: 700, color: palette.pillLabel
         });
         drawCanvasText(ctx, getDisplayDate(), pillX + 16, pillY + 30, {
-          size: 13, weight: 600, color: '#27342B', numeric: true
+          size: 13, weight: 600, color: palette.pillValue, numeric: true
         });
       }
 
       function drawPosterSummary(ctx, layout) {
+        const palette = layout.palette;
         const x = POSTER.margin;
         const y = POSTER.summaryTop;
         const width = layout.width - POSTER.margin * 2;
@@ -2561,18 +2850,18 @@
         const stats = layout.stats;
 
         ctx.save();
-        ctx.shadowColor = 'rgba(38, 58, 43, .08)';
+        ctx.shadowColor = palette.summaryShadow;
         ctx.shadowBlur = 24;
         ctx.shadowOffsetY = 9;
-        fillRoundedRect(ctx, x, y, width, height, 26, '#FFFFFF');
+        fillRoundedRect(ctx, x, y, width, height, 26, palette.summaryCard);
         ctx.restore();
-        strokeRoundedRect(ctx, x, y, width, height, 26, '#E1E6DC', 1);
+        strokeRoundedRect(ctx, x, y, width, height, 26, palette.summaryBorder, 1);
 
         drawCanvasText(ctx, '清单总览', x + 28, y + 34, {
-          size: 12, weight: 700, color: '#27342B'
+          size: 12, weight: 700, color: palette.heading
         });
         drawCanvasText(ctx, 'OVERVIEW / 实时汇总', x + 102, y + 34, {
-          size: 9, weight: 600, color: '#96A098'
+          size: 9, weight: 600, color: palette.meta
         });
 
         const kpiX = x + 28;
@@ -2585,77 +2874,77 @@
           value: formatInteger(stats.totalCount),
           unit: '件',
           foot: '当前清单已录入',
-          color: '#2F7D51'
-        });
+          color: palette.kpiCountColor
+        }, palette);
         drawSummaryKpi(ctx, kpiX + kpiWidth + kpiGap, kpiY, kpiWidth, kpiHeight, {
           label: '装备总重',
           value: formatFixed(stats.totalWeightG / 1000, 2),
           unit: 'kg',
           foot: stats.missingWeightCount ? `已填合计 · ${formatInteger(stats.missingWeightCount)} 件待补充` : '全部装备重量合计',
-          color: '#4E7CE7'
-        });
+          color: palette.kpiWeightColor
+        }, palette);
         drawSummaryKpi(ctx, kpiX + (kpiWidth + kpiGap) * 2, kpiY, kpiWidth, kpiHeight, {
           label: '装备总价值',
           value: formatPrice(stats.totalValue),
           unit: '',
           foot: stats.missingPriceCount ? `已填合计 · ${formatInteger(stats.missingPriceCount)} 件待补充` : '按录入价格计算',
-          color: '#C08732'
-        });
+          color: palette.kpiValueColor
+        }, palette);
 
         ctx.beginPath();
         ctx.moveTo(x + 674, y + 48);
         ctx.lineTo(x + 674, y + height - 34);
-        ctx.strokeStyle = '#EDF0EA';
+        ctx.strokeStyle = palette.divider;
         ctx.lineWidth = 1;
         ctx.stroke();
 
         drawCanvasText(ctx, '重量构成', x + 700, y + 34, {
-          size: 12, weight: 700, color: '#27342B'
+          size: 12, weight: 700, color: palette.heading
         });
         drawCanvasText(ctx, 'BY CATEGORY', x + 762, y + 34, {
-          size: 8.5, weight: 700, color: '#96A098'
+          size: 8.5, weight: 700, color: palette.meta
         });
 
-        drawSummaryDonut(ctx, x + 750, y + 145, 58, stats.activeCategories, stats.totalCount);
-        drawSummaryLegend(ctx, x + 824, y + 69, x + width - 28, stats.activeCategories);
+        drawSummaryDonut(ctx, x + 750, y + 145, 58, stats.activeCategories, stats.totalCount, palette);
+        drawSummaryLegend(ctx, x + 824, y + 69, x + width - 28, stats.activeCategories, palette);
       }
 
-      function drawSummaryKpi(ctx, x, y, width, height, options) {
-        fillRoundedRect(ctx, x, y, width, height, 16, '#F8FAF6');
-        strokeRoundedRect(ctx, x, y, width, height, 16, '#E9EDE4', 1);
+      function drawSummaryKpi(ctx, x, y, width, height, options, palette) {
+        fillRoundedRect(ctx, x, y, width, height, 16, palette.kpiBg);
+        strokeRoundedRect(ctx, x, y, width, height, 16, palette.kpiBorder, 1);
 
         ctx.beginPath();
         ctx.arc(x + 22, y + 24, 3.5, 0, Math.PI * 2);
         ctx.fillStyle = options.color;
         ctx.fill();
         drawCanvasText(ctx, options.label, x + 33, y + 28, {
-          size: 10.5, weight: 600, color: '#68746B'
+          size: 10.5, weight: 600, color: palette.kpiLabel
         });
 
         const maxValueWidth = width - 36 - (options.unit ? 24 : 0);
         const valueSize = fitCanvasText(ctx, options.value, maxValueWidth, 32, 20, 700, true);
         drawCanvasText(ctx, options.value, x + 18, y + 88, {
-          size: valueSize, weight: 700, color: '#17231B', numeric: true
+          size: valueSize, weight: 700, color: palette.kpiValueText, numeric: true
         });
         if (options.unit) {
           const valueWidth = ctx.measureText(options.value).width;
           drawCanvasText(ctx, options.unit, x + 18 + valueWidth + 5, y + 86, {
-            size: 10.5, color: '#7C877F'
+            size: 10.5, color: palette.kpiUnit
           });
         }
 
         drawCanvasText(ctx, options.foot, x + 18, y + 120, {
-          size: 8.5, color: '#9AA39B'
+          size: 8.5, color: palette.kpiFoot
         });
       }
 
-      function drawSummaryDonut(ctx, centerX, centerY, radius, categories, itemCount) {
+      function drawSummaryDonut(ctx, centerX, centerY, radius, categories, itemCount, palette) {
         ctx.save();
         ctx.lineWidth = 17;
         ctx.lineCap = 'butt';
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = '#EDF0EA';
+        ctx.strokeStyle = palette.donutTrack;
         ctx.stroke();
 
         const totalWeight = categories.reduce((sum, category) => sum + category.weightG, 0);
@@ -2674,14 +2963,14 @@
         ctx.restore();
 
         drawCanvasText(ctx, formatInteger(itemCount), centerX, centerY - 1, {
-          size: 27, weight: 700, color: '#17231B', align: 'center', baseline: 'middle', numeric: true
+          size: 27, weight: 700, color: palette.donutCount, align: 'center', baseline: 'middle', numeric: true
         });
         drawCanvasText(ctx, '件装备', centerX, centerY + 24, {
-          size: 8.5, color: '#8D988F', align: 'center', baseline: 'middle'
+          size: 8.5, color: palette.donutLabel, align: 'center', baseline: 'middle'
         });
       }
 
-      function drawSummaryLegend(ctx, x, y, right, categories) {
+      function drawSummaryLegend(ctx, x, y, right, categories, palette) {
         const rowStep = categories.length > 5 ? 18 : 21;
         categories.forEach((category, index) => {
           const rowY = y + index * rowStep;
@@ -2690,36 +2979,37 @@
           ctx.fillStyle = category.color;
           ctx.fill();
           drawCanvasText(ctx, category.name, x + 15, rowY, {
-            size: 11, weight: 500, color: '#68746B'
+            size: 11, weight: 500, color: palette.legendName
           });
           drawCanvasText(ctx, category.weightG > 0 ? formatPercent(category.weightShare) : '—', right, rowY, {
-            size: 9.5, weight: 600, color: '#27342B', align: 'right', numeric: true
+            size: 9.5, weight: 600, color: palette.legendValue, align: 'right', numeric: true
           });
         });
       }
 
       function drawPosterSectionHeading(ctx, layout) {
+        const palette = layout.palette;
         const x = POSTER.margin;
         const baseline = 500;
-        fillRoundedRect(ctx, x, baseline - 17, 4, 21, 2, '#2F7D51');
+        fillRoundedRect(ctx, x, baseline - 17, 4, 21, 2, palette.sectionBar);
         drawCanvasText(ctx, '装备明细', x + 15, baseline, {
-          size: 20, weight: 750, color: '#17231B'
+          size: 20, weight: 750, color: palette.sectionTitle
         });
         drawCanvasText(ctx, `ITEMIZED LOADOUT · ${layout.stats.activeCategories.length} 个分类`, layout.width - POSTER.margin, baseline, {
-          size: 9.5, weight: 600, color: '#8C978E', align: 'right'
+          size: 9.5, weight: 600, color: palette.sectionMeta, align: 'right'
         });
       }
 
-      function drawCategoryCard(ctx, card) {
+      function drawCategoryCard(ctx, card, palette) {
         const { category, x, y, width, height } = card;
 
         ctx.save();
-        ctx.shadowColor = 'rgba(38, 58, 43, .07)';
+        ctx.shadowColor = palette.categoryShadow;
         ctx.shadowBlur = 18;
         ctx.shadowOffsetY = 6;
-        fillRoundedRect(ctx, x, y, width, height, 20, '#FFFFFF');
+        fillRoundedRect(ctx, x, y, width, height, 20, palette.categoryCard);
         ctx.restore();
-        strokeRoundedRect(ctx, x, y, width, height, 20, '#E2E7DE', 1);
+        strokeRoundedRect(ctx, x, y, width, height, 20, palette.categoryBorder, 1);
         fillRoundedRect(ctx, x + 1, y + 17, 4, height - 34, 2, category.color);
 
         const innerLeft = x + 22;
@@ -2729,35 +3019,35 @@
           size: 14, weight: 800, color: category.color, align: 'center', baseline: 'middle'
         });
         drawCanvasText(ctx, category.name, innerLeft + 52, y + 46, {
-          size: 17, weight: 700, color: '#202C24'
+          size: 17, weight: 700, color: palette.categoryTitle
         });
 
         drawCanvasText(ctx, `${formatInteger(category.count)} 件 · ${formatItemWeight(category.weightG)}`, innerRight, y + 43, {
-          size: 10.5, weight: 600, color: '#5C6960', align: 'right', numeric: true
+          size: 10.5, weight: 600, color: palette.categoryStats, align: 'right', numeric: true
         });
         drawCanvasText(ctx, `价值 ${formatPrice(category.value)} · 重量占比 ${formatPercent(category.weightShare)}`, innerRight, y + 63, {
           size: 9.5, weight: 600, color: category.color, align: 'right'
         });
 
         const progressWidth = width - 44;
-        fillRoundedRect(ctx, innerLeft, y + 82, progressWidth, 4, 2, '#EDF0EA');
+        fillRoundedRect(ctx, innerLeft, y + 82, progressWidth, 4, 2, palette.categoryProgress);
         fillRoundedRect(ctx, innerLeft, y + 82, progressWidth * Math.max(0, Math.min(1, category.weightShare)), 4, 2, category.color);
 
         const weightRight = innerRight - 76;
         drawCanvasText(ctx, '装备名称', innerLeft, y + 122, {
-          size: 9, weight: 600, color: '#98A199'
+          size: 9, weight: 600, color: palette.columnLabel
         });
         drawCanvasText(ctx, '重量 (kg)', weightRight, y + 122, {
-          size: 9, weight: 600, color: '#98A199', align: 'right'
+          size: 9, weight: 600, color: palette.columnLabel, align: 'right'
         });
         drawCanvasText(ctx, '价格', innerRight, y + 122, {
-          size: 9, weight: 600, color: '#98A199', align: 'right'
+          size: 9, weight: 600, color: palette.columnLabel, align: 'right'
         });
 
         ctx.beginPath();
         ctx.moveTo(innerLeft, y + 134);
         ctx.lineTo(innerRight, y + 134);
-        ctx.strokeStyle = '#EDF0EA';
+        ctx.strokeStyle = palette.divider;
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -2771,21 +3061,21 @@
 
           nameLines.forEach((line, lineIndex) => {
             drawCanvasText(ctx, line, innerLeft, nameBaseline + lineIndex * lineHeight, {
-              size: 15, weight: 600, color: '#29352C'
+              size: 15, weight: 600, color: palette.itemName
             });
           });
           drawCanvasText(ctx, formatItemWeight(row.item.weightG), weightRight, rowMiddle, {
-            size: 11.5, weight: 500, color: '#6C776F', align: 'right', baseline: 'middle', numeric: true
+            size: 11.5, weight: 500, color: palette.itemWeight, align: 'right', baseline: 'middle', numeric: true
           });
           drawCanvasText(ctx, formatPrice(row.item.price), innerRight, rowMiddle, {
-            size: 13, weight: 650, color: '#202C24', align: 'right', baseline: 'middle', numeric: true
+            size: 13, weight: 650, color: palette.itemPrice, align: 'right', baseline: 'middle', numeric: true
           });
 
           if (index < card.rows.length - 1) {
             ctx.beginPath();
             ctx.moveTo(innerLeft, rowTop + row.height);
             ctx.lineTo(innerRight, rowTop + row.height);
-            ctx.strokeStyle = '#F0F2ED';
+            ctx.strokeStyle = palette.rowDivider;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
@@ -2794,25 +3084,26 @@
       }
 
       function drawPosterFooter(ctx, layout) {
+        const palette = layout.palette;
         const left = POSTER.margin;
         const right = layout.width - POSTER.margin;
         const lineY = layout.height - 50;
         ctx.beginPath();
         ctx.moveTo(left, lineY);
         ctx.lineTo(right, lineY);
-        ctx.strokeStyle = '#DDE3D8';
+        ctx.strokeStyle = palette.footerLine;
         ctx.lineWidth = 1;
         ctx.stroke();
 
         ctx.beginPath();
         ctx.arc(left + 3, lineY + 22, 3, 0, Math.PI * 2);
-        ctx.fillStyle = '#2F7D51';
+        ctx.fillStyle = palette.sectionBar;
         ctx.fill();
         drawCanvasText(ctx, '装备清单 · 单文件本地生成 · 数据仅保存在当前浏览器', left + 13, lineY + 25, {
-          size: 9.5, color: '#88938A'
+          size: 9.5, color: palette.footerText
         });
         drawCanvasText(ctx, `${formatInteger(layout.stats.totalCount)} 件 · ${formatFixed(layout.stats.totalWeightG / 1000, 2)} kg · ${formatPrice(layout.stats.totalValue)}`, right, lineY + 25, {
-          size: 9.5, weight: 600, color: '#66736A', align: 'right', numeric: true
+          size: 9.5, weight: 600, color: palette.footerTotal, align: 'right', numeric: true
         });
       }
       init();
