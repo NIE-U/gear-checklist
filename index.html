@@ -633,14 +633,84 @@
     }
 
     .item-head span:nth-child(2), .item-head span:nth-child(3) { text-align: right; }
-    .item-row { padding: 12px 8px; border-bottom: 1px solid var(--row-border); border-radius: 9px; transition: background .15s ease; }
+    .item-row { position: relative; padding: 12px 8px; border-bottom: 1px solid var(--row-border); border-radius: 9px; touch-action: pan-y; transition: background .15s ease, opacity .15s ease; }
     .item-row:last-child { border-bottom-color: transparent; }
     .item-row:hover { background: var(--row-hover); }
-    .item-name { min-width: 0; color: var(--row-name); font-size: 13px; font-weight: 560; line-height: 1.55; overflow-wrap: anywhere; }
+    .item-name { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--row-name); font-size: 13px; font-weight: 560; line-height: 1.55; overflow-wrap: anywhere; }
+    .item-name-text { min-width: 0; overflow-wrap: anywhere; }
+    .drag-handle {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 21px;
+      height: 30px;
+      margin-left: -4px;
+      border-radius: 6px;
+      color: var(--faint);
+      opacity: .8;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background .15s ease, color .15s ease, opacity .15s ease;
+    }
+    .drag-handle svg { width: 14px; height: 14px; }
+    .item-row:hover .drag-handle { background: var(--surface-soft); color: var(--muted); opacity: 1; }
+    .drag-handle:active { cursor: grabbing; }
     .item-weight, .item-price { text-align: right; font-family: "Bahnschrift", "Microsoft YaHei UI", sans-serif; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .item-weight { color: var(--muted); }
     .item-price { color: var(--ink); font-weight: 650; }
     .row-actions { display: flex; justify-content: flex-end; gap: 1px; }
+
+    .item-row.drag-source { opacity: .36; background: var(--row-hover); }
+    .item-row.drop-before::before,
+    .item-row.drop-after::after {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      left: 4px;
+      right: 4px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--cat);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--cat) 16%, transparent);
+      pointer-events: none;
+    }
+    .item-row.drop-before::before { top: -1px; }
+    .item-row.drop-after::after { bottom: -1px; }
+
+    .gear-groups.drag-active .group-card { border-color: color-mix(in srgb, var(--cat) 22%, var(--line)); }
+    .gear-groups.drag-active .group-card.drop-target {
+      border-color: var(--cat);
+      background: color-mix(in srgb, var(--surface) 92%, var(--cat-soft));
+      box-shadow: 0 0 0 3px var(--cat-soft), 0 14px 38px rgba(38, 58, 43, .08);
+    }
+    .gear-groups.drag-active .group-card.drop-target .category-empty { color: var(--cat); font-weight: 650; }
+
+    .drag-ghost {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      max-width: min(280px, calc(100vw - 24px));
+      padding: 10px 13px;
+      border: 1px solid color-mix(in srgb, var(--cat) 58%, var(--line));
+      border-radius: 13px;
+      background: color-mix(in srgb, var(--surface) 94%, var(--cat-soft));
+      color: var(--ink);
+      box-shadow: 0 18px 44px rgba(22, 34, 26, .2), 0 3px 10px rgba(22, 34, 26, .08);
+      pointer-events: none;
+      will-change: transform;
+    }
+    .drag-ghost-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--cat); box-shadow: 0 0 0 4px var(--cat-soft); }
+    .drag-ghost-copy { min-width: 0; }
+    .drag-ghost-name { display: block; overflow: hidden; font-size: 12px; font-weight: 650; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+    .drag-ghost-meta { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; line-height: 1.4; }
+
+    body.gear-is-dragging, body.gear-is-dragging * { cursor: grabbing !important; user-select: none !important; -webkit-user-select: none !important; }
 
     .icon-btn {
       display: grid;
@@ -1102,7 +1172,7 @@
           <div class="list-heading-meta">
             <strong id="item-count-note">0 件装备</strong>
             <span class="divider-dot"></span>
-            <span>7 个固定分类 · 在分类内直接添加</span>
+            <span>7 个固定分类 · 按住左侧拖动柄可换分类或排序</span>
           </div>
         </div>
 
@@ -1131,7 +1201,7 @@
       <div class="import-body">
         <label class="import-text-label" for="import-text"><strong>装备清单文本</strong><span>勾选和未勾选条目都会导入</span></label>
         <textarea class="import-textarea" id="import-text" spellcheck="false" placeholder="睡眠系统&#10;☑ 帐篷 黑鹿纵横 1.39kg&#10;☐ 睡袋 翼士md700&#10;&#10;服饰系统&#10;☑ 雨衣 三峰出 850g"></textarea>
-        <p class="import-help">支持分类标题：睡眠系统、背负系统、服饰系统、饮食系统、安全装备、电子设备、其他。重量支持 g/kg/克/千克，价格支持 ¥599、599元，或重量后的末尾数字。</p>
+        <p class="import-help">支持分类标题：睡眠系统、背负系统、服饰系统、饮食系统、安全装备、电子设备、其他。未写分类的条目会先放入“其他”，导入后按住左侧拖动柄即可归类。重量支持 g/kg/克/千克，价格支持 ¥599、599元，或重量后的末尾数字。</p>
         <section class="import-preview" aria-labelledby="import-preview-title">
           <div class="import-preview-head">
             <strong id="import-preview-title">解析预览</strong>
@@ -1180,6 +1250,7 @@
       const EDIT_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>';
       const DELETE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg>';
       const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+      const DRAG_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.45"/><circle cx="15" cy="6" r="1.45"/><circle cx="9" cy="12" r="1.45"/><circle cx="15" cy="12" r="1.45"/><circle cx="9" cy="18" r="1.45"/><circle cx="15" cy="18" r="1.45"/></svg>';
       const TWO_COLUMN_QUERY = window.matchMedia('(min-width: 1001px)');
 
       const state = {
@@ -1192,7 +1263,8 @@
         importParsed: null,
         importDuplicateCount: 0,
         layoutSignature: null,
-        layoutColumns: null
+        layoutColumns: null,
+        drag: null
       };
 
       const byId = id => document.getElementById(id);
@@ -1236,6 +1308,12 @@
 
       function bindEvents() {
         els.gearGroups.addEventListener('click', handleGroupAction);
+        els.gearGroups.addEventListener('pointerdown', handleRowPointerDown);
+        document.addEventListener('pointermove', handleRowPointerMove, { passive: false });
+        document.addEventListener('pointerup', handleRowPointerUp);
+        document.addEventListener('pointercancel', handleRowPointerCancel);
+        document.addEventListener('keydown', handleDragKeyDown);
+        window.addEventListener('blur', cancelGearDrag);
         els.exportImage.addEventListener('click', exportLongImage);
         els.exportCsv.addEventListener('click', exportCsv);
         els.themeToggle.addEventListener('click', toggleTheme);
@@ -1920,8 +1998,16 @@
         row.dataset.id = item.id;
         const name = document.createElement('div');
         name.className = 'item-name';
-        name.textContent = item.name;
-        name.title = item.name;
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'drag-handle';
+        dragHandle.innerHTML = DRAG_ICON;
+        dragHandle.title = '按住拖动以更换分类或调整顺序';
+        dragHandle.setAttribute('aria-hidden', 'true');
+        const nameText = document.createElement('span');
+        nameText.className = 'item-name-text';
+        nameText.textContent = item.name;
+        nameText.title = item.name;
+        name.append(dragHandle, nameText);
 
         const weight = document.createElement('div');
         weight.className = 'item-weight';
@@ -1962,6 +2048,295 @@
         button.title = label;
         button.innerHTML = icon;
         return button;
+      }
+
+      function handleRowPointerDown(event) {
+        if (!event.isPrimary || state.drag) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+        const target = event.target instanceof Element ? event.target : null;
+        if (!target || target.closest('button, a, input, select, textarea')) return;
+        const row = target.closest('.item-row');
+        if (!row || !els.gearGroups.contains(row)) return;
+        if (event.pointerType !== 'mouse' && !target.closest('.drag-handle')) return;
+
+        const item = state.items.find(entry => entry.id === row.dataset.id);
+        if (!item) return;
+        if (event.pointerType === 'mouse' && event.cancelable) event.preventDefault();
+
+        state.drag = {
+          pointerId: event.pointerId,
+          itemId: item.id,
+          itemName: item.name,
+          itemWeightG: item.weightG,
+          sourceCategory: item.category,
+          row,
+          startX: event.clientX,
+          startY: event.clientY,
+          x: event.clientX,
+          y: event.clientY,
+          active: false,
+          pointerType: event.pointerType || 'mouse',
+          ghost: null,
+          drop: null,
+          autoScrollFrame: null
+        };
+      }
+
+      function handleRowPointerMove(event) {
+        const drag = state.drag;
+        if (!drag || event.pointerId !== drag.pointerId) return;
+
+        drag.x = event.clientX;
+        drag.y = event.clientY;
+
+        if (!drag.active) {
+          const distance = Math.hypot(drag.x - drag.startX, drag.y - drag.startY);
+          if (distance < 5) return;
+          activateGearDrag();
+        }
+
+        if (!drag.active) return;
+        if (event.cancelable) event.preventDefault();
+        updateGearDragGhost(drag.x, drag.y);
+        updateGearDropTarget(drag.x, drag.y);
+      }
+
+      function activateGearDrag() {
+        const drag = state.drag;
+        if (!drag || drag.active) return;
+        drag.active = true;
+
+        drag.row.classList.add('drag-source');
+        drag.row.setAttribute('aria-grabbed', 'true');
+        try {
+          drag.row.setPointerCapture(drag.pointerId);
+        } catch (error) {
+          // Pointer capture is an enhancement; document-level listeners still handle the drag.
+        }
+
+        const category = CATEGORY_MAP.get(drag.sourceCategory) || CATEGORY_MAP.get('other');
+        const tone = getCategoryTone(category);
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.style.setProperty('--cat', tone.color);
+        ghost.style.setProperty('--cat-soft', tone.soft);
+
+        const dot = document.createElement('span');
+        dot.className = 'drag-ghost-dot';
+        const copy = document.createElement('div');
+        copy.className = 'drag-ghost-copy';
+        const ghostName = document.createElement('strong');
+        ghostName.className = 'drag-ghost-name';
+        ghostName.textContent = drag.itemName;
+        const ghostMeta = document.createElement('span');
+        ghostMeta.className = 'drag-ghost-meta';
+        ghostMeta.textContent = `${category.name} · ${formatItemWeight(drag.itemWeightG)}`;
+        copy.append(ghostName, ghostMeta);
+        ghost.append(dot, copy);
+        document.body.appendChild(ghost);
+        drag.ghost = ghost;
+
+        document.body.classList.add('gear-is-dragging');
+        els.gearGroups.classList.add('drag-active');
+        updateGearDragGhost(drag.x, drag.y);
+        updateGearDropTarget(drag.x, drag.y);
+        startGearDragAutoScroll();
+      }
+
+      function updateGearDragGhost(x, y) {
+        const drag = state.drag;
+        if (!drag || !drag.ghost) return;
+        const width = drag.ghost.offsetWidth || 220;
+        const height = drag.ghost.offsetHeight || 52;
+        let left = x + 16;
+        let top = y + 16;
+        if (left + width > window.innerWidth - 10) left = x - width - 16;
+        if (top + height > window.innerHeight - 10) top = y - height - 16;
+        left = Math.max(10, Math.min(window.innerWidth - width - 10, left));
+        top = Math.max(10, Math.min(window.innerHeight - height - 10, top));
+        drag.ghost.style.transform = `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`;
+      }
+
+      function getGearDropTarget(x, y, drag) {
+        const hit = document.elementFromPoint(x, y);
+        if (!hit) return null;
+        const card = hit.closest('.group-card');
+        if (!card || !els.gearGroups.contains(card)) return null;
+        const category = card.dataset.category;
+        if (!CATEGORY_MAP.has(category)) return null;
+
+        const row = hit.closest('.item-row');
+        if (row && card.contains(row)) {
+          if (row.dataset.id === drag.itemId) return null;
+          const rect = row.getBoundingClientRect();
+          return {
+            card,
+            row,
+            category,
+            targetId: row.dataset.id,
+            position: y < rect.top + rect.height / 2 ? 'before' : 'after'
+          };
+        }
+
+        const rows = Array.from(card.querySelectorAll('.item-row'))
+          .filter(entry => entry.dataset.id !== drag.itemId);
+        const lastRow = rows[rows.length - 1] || null;
+        return {
+          card,
+          row: lastRow,
+          category,
+          targetId: lastRow ? lastRow.dataset.id : null,
+          position: lastRow ? 'after' : 'append'
+        };
+      }
+
+      function updateGearDropTarget(x, y) {
+        const drag = state.drag;
+        if (!drag || !drag.active) return;
+        const target = getGearDropTarget(x, y, drag);
+        if (!target) {
+          drag.drop = null;
+          clearGearDropIndicators();
+          return;
+        }
+
+        const previous = drag.drop;
+        if (previous && previous.card === target.card && previous.row === target.row && previous.position === target.position) return;
+
+        clearGearDropIndicators();
+        drag.drop = target;
+        target.card.classList.add('drop-target');
+        if (target.row) target.row.classList.add(target.position === 'before' ? 'drop-before' : 'drop-after');
+      }
+
+      function clearGearDropIndicators() {
+        els.gearGroups.querySelectorAll('.drop-target, .drop-before, .drop-after').forEach(element => {
+          element.classList.remove('drop-target', 'drop-before', 'drop-after');
+        });
+      }
+
+      function startGearDragAutoScroll() {
+        const drag = state.drag;
+        if (!drag) return;
+        const tick = () => {
+          if (!state.drag || state.drag !== drag || !drag.active) return;
+          const edge = 84;
+          let delta = 0;
+          if (drag.y < edge) delta = -Math.min(18, Math.ceil((edge - drag.y) / 4));
+          else if (drag.y > window.innerHeight - edge) delta = Math.min(18, Math.ceil((drag.y - (window.innerHeight - edge)) / 4));
+
+          if (delta) {
+            const before = window.scrollY;
+            window.scrollBy(0, delta);
+            if (window.scrollY !== before) updateGearDropTarget(drag.x, drag.y);
+          }
+          drag.autoScrollFrame = window.requestAnimationFrame(tick);
+        };
+        drag.autoScrollFrame = window.requestAnimationFrame(tick);
+      }
+
+      function handleRowPointerUp(event) {
+        const drag = state.drag;
+        if (!drag || event.pointerId !== drag.pointerId) return;
+
+        if (drag.active) {
+          if (event.cancelable) event.preventDefault();
+          updateGearDropTarget(event.clientX, event.clientY);
+          const result = drag.drop ? applyGearDrop(drag, drag.drop) : null;
+          teardownGearDrag();
+          if (result && result.changed) {
+            saveItems();
+            renderAll();
+            showToast(result.categoryChanged ? `已移到「${result.categoryName}」。` : '装备顺序已调整。');
+          }
+          return;
+        }
+
+        teardownGearDrag();
+      }
+
+      function handleRowPointerCancel(event) {
+        const drag = state.drag;
+        if (drag && event.pointerId === drag.pointerId) teardownGearDrag();
+      }
+
+      function handleDragKeyDown(event) {
+        if (event.key !== 'Escape' || !state.drag) return;
+        event.preventDefault();
+        cancelGearDrag();
+      }
+
+      function cancelGearDrag() {
+        if (state.drag) teardownGearDrag();
+      }
+
+      function teardownGearDrag() {
+        const drag = state.drag;
+        if (!drag) return;
+        if (drag.autoScrollFrame) window.cancelAnimationFrame(drag.autoScrollFrame);
+        if (drag.ghost) drag.ghost.remove();
+        if (drag.row) {
+          drag.row.classList.remove('drag-source');
+          drag.row.removeAttribute('aria-grabbed');
+          try {
+            if (drag.row.hasPointerCapture(drag.pointerId)) drag.row.releasePointerCapture(drag.pointerId);
+          } catch (error) {
+            // The row may already have been detached.
+          }
+        }
+        clearGearDropIndicators();
+        els.gearGroups.classList.remove('drag-active');
+        document.body.classList.remove('gear-is-dragging');
+        state.drag = null;
+      }
+
+      function getGearVisualOrderSignature(items) {
+        return CATEGORIES.map(category => {
+          const ids = items.filter(item => item.category === category.key).map(item => item.id);
+          return `${category.key}:${ids.join(',')}`;
+        }).join('|');
+      }
+
+      function applyGearDrop(drag, drop) {
+        const sourceItem = state.items.find(entry => entry.id === drag.itemId);
+        if (!sourceItem) return { changed: false };
+
+        const beforeSignature = getGearVisualOrderSignature(state.items);
+        const rest = state.items.filter(entry => entry.id !== sourceItem.id);
+        let anchorIndex = -1;
+        let insertAfter = false;
+
+        if (drop.targetId) {
+          anchorIndex = rest.findIndex(entry => entry.id === drop.targetId);
+          insertAfter = drop.position === 'after';
+        }
+
+        if (anchorIndex < 0) {
+          for (let index = rest.length - 1; index >= 0; index -= 1) {
+            if (rest[index].category === drop.category) {
+              anchorIndex = index;
+              insertAfter = true;
+              break;
+            }
+          }
+        }
+
+        const movedItem = { ...sourceItem, category: drop.category };
+        const nextItems = rest.slice();
+        const insertIndex = anchorIndex < 0 ? nextItems.length : (insertAfter ? anchorIndex + 1 : anchorIndex);
+        nextItems.splice(insertIndex, 0, movedItem);
+
+        if (getGearVisualOrderSignature(nextItems) === beforeSignature) return { changed: false };
+
+        state.items = nextItems;
+        if (sourceItem.category !== drop.category && state.editingId === sourceItem.id) state.formCategory = drop.category;
+        const category = CATEGORY_MAP.get(drop.category) || CATEGORY_MAP.get('other');
+        return {
+          changed: true,
+          categoryChanged: sourceItem.category !== drop.category,
+          categoryName: category.name
+        };
       }
 
       function updateActionButtons(count) {
